@@ -24,4 +24,14 @@ dist/
 # environment variables
 .env
 
+# ICP
 .mops
+deps/
+canister_ids.json
+
+.github/
+
+# pnpm and npm locks
+pnpm-lock.yaml
+package-lock.json
+
