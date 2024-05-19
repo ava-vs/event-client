@@ -11,6 +11,10 @@ This repository contains the implementation of the **Event Hub** in [Motoko](htt
 ## Overview:
 ![Event_Hub](https://github.com/ava-vs/event_hub/assets/30374212/e29abbbf-2d5f-4bdf-a981-4403f8aedbac)
 
+### Simple Use Case
+![Oneshot_GameEvent](https://github.com/ava-vs/event-client/assets/30374212/e86f5124-f77f-45e7-abe7-a308a5f1a072)
+
+
 ## Features:
 - Subscriber Management: Functions for subscribing (subscribe) and unsubscribing (unsubscribe) to events.
 - Publication Managment: Register a new publication and publish events to subscribers.
