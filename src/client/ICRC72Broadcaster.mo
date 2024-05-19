@@ -14,8 +14,9 @@ import Nat32 "mo:base/Nat32";
 import Publisher "./publications/PublisherManager";
 import SubscriptionManager "./subscriptions/SubscriptionManager";
 import Types "ICRC72Types";
-// import T "./EthTypes";
-// import EthSender "./EventSender";
+import T "./EthTypes";
+import EthSender "./EventSender";
+import Utils "Utils";
 
 actor class ICRC72Broadcaster() = Self {
     type Event = {
@@ -113,8 +114,12 @@ actor class ICRC72Broadcaster() = Self {
         }];
     };
 
+    let default_publication_config = [("key", #Text("value"))];
+
     private let subManager = SubscriptionManager.SubscriptionManager();
     private let pubManager = Publisher.PublisherManager();
+
+    // Create event part
 
     public func createEvent({
         id : Nat;
@@ -150,8 +155,14 @@ actor class ICRC72Broadcaster() = Self {
             // send event to subscribers
             let publish_result = await pubManager.publishEventToSubscribers(_subscribers, event);
             result_buffer.add(filter, publish_result);
+            // ignore await increasePublicationMessagesSentStats(event.source, event.namespace, "messagesSent");
         };
         Buffer.toArray(result_buffer);
+    };
+
+    // key = "messagesSent"
+    func increasePublicationMessagesSentStats(publisher : Principal, namespace : Text, key : Text) : async Nat {
+        await pubManager.increasePublicationMessagesSentStats(publisher, namespace, key);
     };
 
     func parseNamespace(namespace : Text) : [Text] {
@@ -159,6 +170,8 @@ actor class ICRC72Broadcaster() = Self {
         let partsIter = Text.split(namespace, delimiter);
         Iter.toArray(partsIter);
     };
+
+    // Subscription part
 
     public func createSubscription({
         subscriber : Principal;
@@ -228,21 +241,71 @@ actor class ICRC72Broadcaster() = Self {
         Array.map<(Text, Text), Types.PublicationInfo>(
             stats,
             func(stat) : Types.PublicationInfo {
-                { namespace = stat.0; stats = [(stat.0, textToICRC16(stat.1))] };
+                {
+                    namespace = stat.0;
+                    stats = [(stat.0, textToICRC16(stat.1))];
+                };
             },
         );
     };
 
-    public func register_publication({
-        subscriber : Principal;
-        publications : [{
-            namespace : Text;
-            stats : [(Text, Text)];
+    // Subscription handling
+    /*   icrc72_handle_notification([Message]) : async ();
+        icrc72_handle_notification_trusted([Message]) : async {
+            #Ok : Value;
+            #Err : Text;
+        }; */
 
-        }];
-    }) : async [(Text, Bool)] {
-        let publicationInfo = textArrayToPublicationInfo(publications[0].stats);
-        await pubManager.register_publications(subscriber, publicationInfo);
+    public func icrc72_handle_notification(messages : [Types.Message]) : async () {
+        Debug.print("Handling message with icrc72_handle_notification, messages size: " # Nat.toText(messages.size()));
+        Debug.print("Handling message, first message from: " # Principal.toText(messages[0].source) # " namespace: " # messages[0].namespace);
+    };
+
+    public func icrc72_handle_notification_trusted(messages : [Types.Message]) : async [Result.Result<Bool, Text>] {
+        Debug.print("Handling message with icrc72_handle_notification_trusted, messages size: " # Nat.toText(messages.size()));
+        Debug.print("Handling message, first message from: " # Principal.toText(messages[0].source));
+        Array.map<Types.Message, Result.Result<Bool, Text>>(
+            messages,
+            func(message) : Result.Result<Bool, Text> {
+                #ok true;
+            },
+        );
+    };
+
+    // Registers a publication for a subscriber in the specified namespace.
+    //
+    // Arguments:
+    // - publisher: The principal of the subscriber.
+    // - namespace: The namespace of the publication.
+    //
+    // Returns:
+    // boolean indicating success.
+    public func register_publication(
+        publisher : Principal,
+        namespace : Text,
+    ) : async Bool {
+        let publication : Types.PublicationRegistration = {
+            namespace = namespace;
+            config = default_publication_config;
+        };
+        let res = await pubManager.register_single_publication(publisher, publication);
+        res.1;
+    };
+
+    public func getPublications(publisher : Principal) : async [Types.PublicationInfo] {
+        await pubManager.getPublications(publisher);
+    };
+
+    public func getPublishers() : async [Principal] {
+        await pubManager.getPublishers();
+    };
+
+    public func unregisterPublisher(publisher : Principal) : async Bool {
+        await pubManager.unregisterPublisher(publisher);
+    };
+
+    public func removePublication(publisher : Principal, namespace : Text) : async Bool {
+        await pubManager.removePublication(publisher, namespace);
     };
 
     //----------------------------------------------------------------------------------------
@@ -284,7 +347,7 @@ actor class ICRC72Broadcaster() = Self {
             [
                 {
                     namespace = namespace;
-                    stats = [("key", #Text("value"))];
+                    config = default_publication_config;
                 },
             ],
         );
@@ -332,14 +395,14 @@ actor class ICRC72Broadcaster() = Self {
         assert (not wrongNamespaceResult[0].1);
 
         // School registers publications
-        let school_publications : [Types.PublicationInfo] = [
+        let school_publications : [Types.PublicationRegistration] = [
             {
                 namespace = "school.news";
-                stats = [("key", #Text("value"))];
+                config = default_publication_config;
             },
             {
                 namespace = "hackathon";
-                stats = [("key", #Text("value"))];
+                config = default_publication_config;
             },
         ];
 
@@ -386,9 +449,9 @@ actor class ICRC72Broadcaster() = Self {
             id = 2;
         };
         let handle_event1 = await Self.handleNewEvent(event1);
-        Debug.print("test_hackathon: handle_event1: " # Bool.toText(handle_event1[0].1));
+        Debug.print("test_hackathon: handle_event1: " # Bool.toText(handle_event1[0].1) # " " # handle_event1[0].0);
         let handle_event2 = await Self.handleNewEvent(event2);
-        Debug.print("test_hackathon: handle_event2: " # Bool.toText(handle_event2[0].1));
+        Debug.print("test_hackathon: handle_event2: " # Bool.toText(handle_event2[0].1) # " " # handle_event2[0].0);
 
         // School registers subscription to school.hackathon
         let school_sub_result2 = await Self.subscribe({
@@ -404,8 +467,8 @@ actor class ICRC72Broadcaster() = Self {
         assert school_sub_result2 == true;
 
         // Dev registers publication to dev.hackathon
-        let dev_reg_pub_result = await pubManager.register_publications(dev, [{ namespace = "hackathon"; stats = [("key", #Text("value"))] }]);
-        Debug.print("test_hackathon: dev_reg_pub_result: " # Bool.toText(dev_reg_pub_result[0].1));
+        let dev_reg_pub_result = await pubManager.register_publications(dev, [{ namespace = "hackathon"; config = default_publication_config }]);
+        Debug.print("test_hackathon: dev_reg_pub_result: " # Bool.toText(dev_reg_pub_result[0].1) # " namespace " # dev_reg_pub_result[0].0);
         let dev_sub_result2 = await Self.subscribe({
             namespace = "hackathon";
             subscriber = dev;
@@ -427,7 +490,7 @@ actor class ICRC72Broadcaster() = Self {
             id = 3;
         };
         let event3_result = await Self.handleNewEvent(event3);
-        Debug.print("test_hackathon: event3_result: " # Bool.toText(event3_result[0].1));
+        Debug.print("test_hackathon: event3_result: " # Bool.toText(event3_result[0].1) # " " # event3_result[0].0);
         assert event3_result[0].1 == true;
 
         // School publishes final event to school.news
@@ -439,7 +502,7 @@ actor class ICRC72Broadcaster() = Self {
             id = 4;
         };
         let handle_event3 = await Self.handleNewEvent(event4);
-        Debug.print("test_hackathon: handle_event3: " # Bool.toText(handle_event3[0].1));
+        Debug.print("test_hackathon: handle_event3: " # Bool.toText(handle_event3[0].1) # " " # handle_event3[0].0);
         assert (handle_event3[0].1 == true);
         // All assertions passed
         return true;
@@ -448,85 +511,85 @@ actor class ICRC72Broadcaster() = Self {
     //-----------------------------------------------------------------------------
     // Ethereum Event Sender
 
-    // public func requestCost(source : T.RpcService, jsonRequest : Text, maxResponseBytes : Nat) : async Nat {
-    //     await EthSender.requestCost(source, jsonRequest, Nat64.fromNat(maxResponseBytes));
-    // };
+    public func requestCost(source : T.RpcService, jsonRequest : Text, maxResponseBytes : Nat) : async Nat {
+        await EthSender.requestCost(source, jsonRequest, Nat64.fromNat(maxResponseBytes));
+    };
 
-    // public func getEthLogs(source_text : Text, provider : Text, config_text : Nat, addresses : [Text], blockTag : Text, fromBlock : Nat, toBlock : Nat, topics : [Text]) : async () {
-    //     let source = parseRpcSource(source_text, provider);
-    //     let config = parseRpcConfig(config_text);
-    //     let getLogArgs = parseGetLogsArgs(addresses : [Text], blockTag : Text, fromBlock : Nat, toBlock : Nat, topics : [Text]);
-    //     Debug.print("getEthLogs: source: " # source_text # " , provider: " # provider # " , config: " # Nat.toText(config_text) # " , addresses: " # addresses[0] # " , blockTag: " # blockTag # " , fromBlock: " # Nat.toText(fromBlock) # " , toBlock: " # Nat.toText(toBlock) # " , topics: " # topics[0]);
-    //     // TODO result handling
-    //     let result = await EthSender.eth_getLogs(source, config, getLogArgs);
-    //     switch (result) {
-    //         case (#Consistent(_)) {
-    //             Debug.print("getEthLogs: Consistent");
-    //         };
-    //         case (_) {
-    //             Debug.print("getEthLogs: Inconsistent");
-    //         };
-    //     };
+    public func getEthLogs(source_text : Text, provider : Text, config_text : Nat, addresses : [Text], blockTagFrom : Text, fromBlock : Nat, blockTagTo : Text, toBlock : Nat, topics : [Text], cycles : Nat) : async () {
+        let source = parseRpcSource(source_text, provider);
+        let config = parseRpcConfig(config_text);
+        let getLogArgs = parseGetLogsArgs(addresses, blockTagFrom, fromBlock, blockTagTo, toBlock, topics);
+        Debug.print("getEthLogs: source: " # source_text # " , provider: " # provider # " , config: " # Nat.toText(config_text) # " , addresses: " # addresses[0] # " , blockTag: " # blockTagFrom # " , fromBlock: " # Nat.toText(fromBlock) # " , toBlock: " # Nat.toText(toBlock) # " , topics: " # topics[0]);
+        // TODO result handling
+        let result = await EthSender.eth_getLogs(source, config, getLogArgs, cycles);
+        switch (result) {
+            case (#Consistent(_)) {
+                Debug.print("getEthLogs: Consistent");
+            };
+            case (_) {
+                Debug.print("getEthLogs: Inconsistent");
+            };
+        };
 
-    //     return;
-    // };
+        return;
+    };
 
-    // func parseRpcSource(source_text : Text, provider : Text) : T.RpcSources {
-    //     if (source_text == "Sepolia") {
-    //         return #EthSepolia(?[parseEthSepoliaService(provider)]);
-    //     } else if (source_text == "Mainnet") {
-    //         return #EthMainnet(?[parseEthMainnetService(provider)]);
-    //     } else {
-    //         return #EthSepolia(?[#Alchemy]);
-    //     };
+    func parseRpcSource(source_text : Text, provider : Text) : T.RpcSources {
+        if (source_text == "Sepolia") {
+            return #EthSepolia(?[parseEthSepoliaService(provider)]);
+        } else if (source_text == "Mainnet") {
+            return #EthMainnet(?[parseEthMainnetService(provider)]);
+        } else {
+            return #EthSepolia(?[#Alchemy]);
+        };
 
-    // };
+    };
 
-    // func parseRpcConfig(config : Nat) : ?T.RpcConfig {
-    //     ?{ responseSizeEstimate = ?Nat64.fromNat(config) };
-    // };
+    func parseRpcConfig(config : Nat) : ?T.RpcConfig {
+        ?{ responseSizeEstimate = ?Nat64.fromNat(config) };
+    };
 
-    // func parseGetLogsArgs(addresses : [Text], blockTag : Text, fromBlock : Nat, toBlock : Nat, topics : [Text]) : T.GetLogsArgs {
-    //     {
-    //         addresses = addresses;
-    //         fromBlock = parseBlockTag(blockTag, fromBlock);
-    //         toBlock = parseBlockTag(blockTag, toBlock);
-    //         topics = ?[topics];
-    //     };
-    // };
+    func parseGetLogsArgs(addresses : [Text], blockTagFrom : Text, fromBlock : Nat, blockTagTo : Text, toBlock : Nat, topics : [Text]) : T.GetLogsArgs {
+        {
+            addresses = addresses;
+            fromBlock = parseBlockTag(blockTagFrom, fromBlock);
+            toBlock = parseBlockTag(blockTagTo, toBlock);
+            topics = ?[topics];
+        };
+    };
 
-    // func parseBlockTag(blockTag : Text, number : Nat) : ?T.BlockTag {
-    //     switch (blockTag) {
-    //         case ("Earliest") { return ? #Earliest };
-    //         case ("Safe") { return ? #Safe };
-    //         case ("Finalized") { return ? #Finalized };
-    //         case ("Latest") { return ? #Latest };
-    //         case ("Pending") { return ? #Pending };
-    //         case ("Number") {
-    //             return ? #Number(number);
-    //         };
-    //         case (_) { return null };
-    //     };
-    // };
+    func parseBlockTag(blockTag : Text, number : Nat) : ?T.BlockTag {
+        switch (blockTag) {
+            case ("Earliest") { return ? #Earliest };
+            case ("Safe") { return ? #Safe };
+            case ("Finalized") { return ? #Finalized };
+            case ("Latest") { return ? #Latest };
+            case ("Pending") { return ? #Pending };
+            case ("Number") {
+                return ? #Number(number);
+            };
+            case (_) { return null };
+        };
+    };
 
-    // func parseEthSepoliaService(service : Text) : T.EthSepoliaService {
-    //     switch (service) {
-    //         case ("Alchemy") { return #Alchemy };
-    //         case ("BlockPi") { return #BlockPi };
-    //         case ("PublicNode") { return #PublicNode };
-    //         case ("Ankr") { return #Ankr };
-    //         case (_) { return #Alchemy };
-    //     };
-    // };
+    func parseEthSepoliaService(service : Text) : T.EthSepoliaService {
+        switch (service) {
+            case ("Alchemy") { return #Alchemy };
+            case ("BlockPi") { return #BlockPi };
+            case ("PublicNode") { return #PublicNode };
+            case ("Ankr") { return #Ankr };
+            case (_) { return #Alchemy };
+        };
+    };
 
-    // func parseEthMainnetService(service : Text) : T.EthMainnetService {
-    //     switch (service) {
-    //         case ("Alchemy") { return #Alchemy };
-    //         case ("BlockPi") { return #BlockPi };
-    //         case ("Cloudflare") { return #Cloudflare };
-    //         case ("PublicNode") { return #PublicNode };
-    //         case ("Ankr") { return #Ankr };
-    //         case (_) { return #Alchemy };
-    //     };
-    // };
+    func parseEthMainnetService(service : Text) : T.EthMainnetService {
+        switch (service) {
+            case ("Alchemy") { return #Alchemy };
+            case ("BlockPi") { return #BlockPi };
+            case ("Cloudflare") { return #Cloudflare };
+            case ("PublicNode") { return #PublicNode };
+            case ("Ankr") { return #Ankr };
+            case (_) { return #Alchemy };
+        };
+    };
 };
