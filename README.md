@@ -32,7 +32,7 @@ This project depends on [evm_rpc canister](https://github.com/internet-computer-
 
 ### Mainnet
 ```bash
-cd event_hub_client
+cd event_client
 dfx deploy --ic
 ```
 
@@ -48,6 +48,12 @@ dfx deps init evm_rpc --argument '(record { nodesInSubnet = 28 })'
 dfx deps deploy
 dfx deploy
 ```
+
+or 
+```bash
+sh deps-deploy.sh
+```
+
 ### Contributing
 Contributions are welcome. Please submit a pull request or open an issue to discuss your ideas.
 
