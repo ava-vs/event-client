@@ -1,130 +1,107 @@
 <script>
-	// import { logo } from "$lib/images/logo_hub.svg";
-</script>
+	import copy_icon from "$lib/images/copy_icon.png";
+	import { loginII, logout, isAuthenticated, principalId } from "./auth.js";
 
-<main>
-	<div class="container">
-		<section class="content">
-			<h1>EVENT HUB</h1>
-			<div class="events">
-				<h2>NEARBY EVENTS</h2>
-				<ul>
-					<!-- <li>24/05/2024 Hackathon</li> -->
-					<li>22/06/2024 Motoko Bootcamp</li>
-					<!-- <li>24/04/2024 Hackathon</li>
-					<li>24/04/2024 Hackathon</li>
-					<li>24/04/2024 Hackathon</li> -->
-				</ul>
-				<a href="https://check.ava.capetown">All Events</a>
-			</div>
-		</section>
-	</div>
-</main>
+	let loggedIn = false;
+	let principal = "";
+	principalId.subscribe((value) => {
+		principal = value;
+	});
 
-<style>
-	.container {
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-start;
-		height: 100vh;
-		padding: 2rem 1rem;
-		color: white;
+	function handleLogin() {
+		loginII();
 	}
 
-	.content {
-		flex: 1;
+	function handleLogout() {
+		logout();
+	}
+
+	isAuthenticated.subscribe((value) => {
+		loggedIn = value;
+	});
+
+	async function copyValue() {
+		await navigator.clipboard.writeText(principal);
+		alert("ID скопирован: " + principal);
+	}
+</script>
+
+<svelte:head>
+	<title>aVa Check Home</title>
+	<meta name="description" content="aVa Reputation Demo app" />
+</svelte:head>
+
+<section>
+	<h1>
+		<!-- <span class="welcome">
+			<picture>
+				<source srcset={welcome} type="image/webp" />
+				<img src={welcome} alt="Welcome" />
+			</picture>
+		</span> -->
+		<br />
+	</h1>
+	{#if loggedIn}
+		<h2>Your aVa id is:</h2>
+		<span class="user_principal"
+			>{principal}
+			<button on:click={copyValue}
+				><img class="copy_icon" src={copy_icon} alt="Copy ID" /></button
+			>
+		</span>
+		<br />
+		<h2>
+			Save your this id and Internet Identity number for later use. <br />
+		</h2>
+		<br />
+		<button class="logout" on:click={handleLogout}> Logout</button>
+	{:else}
+		<button class="login" on:click={handleLogin}>
+			Please Login with Internet Identity</button
+		>
+	{/if}
+</section>
+
+<style>
+	section {
 		display: flex;
 		flex-direction: column;
-		justify-content: flex-start;
+		justify-content: center;
 		align-items: center;
-		text-align: center;
-		padding-left: 2rem;
+		flex: 0.6;
 	}
 
 	h1 {
-		font-family: "Inter", sans-serif;
-		font-size: 8em;
-		margin: 0;
-		/* white-space: nowrap; */
+		width: inherit;
 	}
 
-	.events {
-		margin-top: 2rem;
-		text-align: left;
-		width: 100%;
-		max-width: 600px;
+	h2 {
+		max-width: 450px;
+		margin: 0 auto;
+		text-align: center;
+		margin-top: 1em;
+		margin-bottom: 1em;
+		font-size: 1.2em;
 	}
 
-	.events h2 {
-		font-family: "Inter", sans-serif;
-		font-size: 2em;
-	}
-
-	.events ul {
-		list-style: none;
-		padding: 0;
-	}
-
-	.events li {
-		font-family: "Inter", sans-serif;
-		font-size: 1.5em;
-		margin: 0.5rem 0;
-	}
-
-	.events a {
-		display: inline-block;
-		margin-top: 1rem;
-		font-family: "Inter", sans-serif;
-		font-size: 1.5em;
+	.login,
+	.logout {
+		background-color: #ee4817;
 		color: white;
-		text-decoration: none;
+		padding: 14px 20px;
+		margin: 8px 0;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
 	}
 
-	@media (max-width: 1200px) {
-		.content {
-			align-items: center;
-			text-align: center;
-			padding-left: 0;
-		}
-
-		h1 {
-			font-size: 6em;
-		}
+	.login:hover,
+	.logout:hover {
+		background-color: #d43504;
 	}
 
-	@media (max-width: 1024px) {
-		h1 {
-			font-size: 5em;
-		}
-
-		.events h2 {
-			font-size: 1.8em;
-		}
-
-		.events li {
-			font-size: 1.3em;
-		}
-
-		.events a {
-			font-size: 1.3em;
-		}
-	}
-
-	@media (max-width: 768px) {
-		h1 {
-			font-size: 4em;
-		}
-
-		.events h2 {
-			font-size: 1.5em;
-		}
-
-		.events li {
-			font-size: 1.2em;
-		}
-
-		.events a {
-			font-size: 1.2em;
-		}
+	.copy_icon {
+		width: 15px;
+		height: 20px;
 	}
 </style>

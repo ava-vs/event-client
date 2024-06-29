@@ -1,8 +1,6 @@
 <script>
 	import { browser } from "$app/environment";
 	import { page } from "$app/stores";
-	// import { back } from "$lib/images/back_client.svg";
-	// import './styles.css';
 
 	/** @type {import('./$types').LayoutServerData} */
 </script>
@@ -14,19 +12,9 @@
 		href="https://fonts.googleapis.com/css2?family=Lexend+Zetta:wght@100..900&display=swap"
 		rel="stylesheet"
 	/>
-
 	<main>
 		<slot />
 	</main>
-
-	<!-- <footer>
-		<p>
-			Visit <a
-				href="https://github.com/ava-vs/reputation/wiki"
-				target="_blank">our Wiki</a
-			> to learn more about aVa
-		</p>
-	</footer> -->
 </div>
 
 <style>
@@ -34,33 +22,26 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+		width: 100vw; /* Full viewport width */
+		overflow-x: hidden; /* Prevent horizontal scrolling */
 	}
-
 	main {
 		flex: 1;
+		padding-top: 3em;
 		display: flex;
 		flex-direction: column;
-		padding: 1rem;
+		padding: 0; /* Remove padding */
 		width: 100%;
-		margin: 0 auto;
+		min-width: 440px;
+		height: 100%; /* Full height */
+		margin: 0;
 		box-sizing: border-box;
+		overflow-y: auto; /* Allow vertical scrolling if needed */
 	}
-
-	/* footer {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		padding: 12px;
-	}
-
-	footer a {
-		font-weight: bold;
-	} */
-
-	@media (min-width: 480px) {
-		/* footer {
-			padding: 12px 0;
-		} */
+	@media (max-width: 480px) {
+		main {
+			width: 100vw; /* Full viewport width on mobile */
+			min-height: 100vh; /* Minimum full viewport height */
+		}
 	}
 </style>
