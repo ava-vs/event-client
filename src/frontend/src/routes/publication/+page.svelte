@@ -46,7 +46,7 @@
             headers: includeHeaders ? JSON.parse(headers) : null,
         };
         return _client_canister_actor
-            .icrc72_publish([event])
+            .frontEvent_publish([event])
             .then((publication) => {
                 console.log("publication created: ", publication);
                 return publication;
@@ -172,13 +172,13 @@
         background-color: #d43504;
     }
 
-    form {
+    /* form {
         display: flex;
         flex-direction: column;
         gap: 1rem;
         max-width: 400px;
         margin: 0 auto;
-    }
+    } */
 
     div {
         display: flex;
@@ -186,7 +186,7 @@
         align-items: center;
     }
 
-    input[type="text"],
+    /* input[type="text"],
     input[type="number"],
     textarea {
         width: 60%;
@@ -194,7 +194,7 @@
 
     textarea {
         height: 100px;
-    }
+    } */
 
     button {
         margin-top: 1rem;

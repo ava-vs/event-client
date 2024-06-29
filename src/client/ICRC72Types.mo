@@ -2,14 +2,6 @@ import Nat64 "mo:base/Nat64";
 import Buffer "mo:base/Buffer";
 
 module {
-    public type Message = {
-        id : Nat;
-        timestamp : Nat;
-        namespace : Text;
-        data : ICRC16;
-        source : Principal;
-        filter : [Text];
-    };
 
     public type ICRC16Property = {
         name : Text;
@@ -123,30 +115,30 @@ module {
         messagesConfirmed : Nat; // Number of messages confirmed by the subscriber (acknowledgment of processing or receipt)
     };
 
-    public func mapValueToICRC16(data : Value) : ICRC16 {
-        switch (data) {
-            case (#Nat(v)) #Nat(v);
-            case (#Nat8(v)) #Nat8(v);
-            case (#Int(v)) #Int(v);
-            case (#Text(v)) #Text(v);
-            case (#Blob(v)) #Blob(v);
-            case (#Bool(v)) #Bool(v);
-            case (#Array(v)) {
-                let result = Buffer.Buffer<ICRC16>(v.size());
-                for (item in v.vals()) {
-                    result.add(mapValueToICRC16(item));
-                };
-                #Array(Buffer.toArray(result));
-            };
-            case (#Map(v)) {
-                let result = Buffer.Buffer<(Text, ICRC16)>(v.size());
-                for (item in v.vals()) {
-                    result.add((item.0, mapValueToICRC16(item.1)));
-                };
-                #Map(Buffer.toArray(result));
-            };
-        };
-    };
+    // public func mapValueToICRC16(data : Value) : ICRC16 {
+    //     switch (data) {
+    //         case (#Nat(v)) #Nat(v);
+    //         case (#Nat8(v)) #Nat8(v);
+    //         case (#Int(v)) #Int(v);
+    //         case (#Text(v)) #Text(v);
+    //         case (#Blob(v)) #Blob(v);
+    //         case (#Bool(v)) #Bool(v);
+    //         case (#Array(v)) {
+    //             let result = Buffer.Buffer<ICRC16>(v.size());
+    //             for (item in v.vals()) {
+    //                 result.add(mapValueToICRC16(item));
+    //             };
+    //             #Array(Buffer.toArray(result));
+    //         };
+    //         case (#Map(v)) {
+    //             let result = Buffer.Buffer<(Text, ICRC16)>(v.size());
+    //             for (item in v.vals()) {
+    //                 result.add((item.0, mapValueToICRC16(item.1)));
+    //             };
+    //             #Map(Buffer.toArray(result));
+    //         };
+    //     };
+    // };
 
     public func appendArray<X>(array1 : [X], array2 : [X]) : [X] {
         let buffer1 = Buffer.fromArray<X>(array1);
@@ -160,38 +152,55 @@ module {
         #Err : Text;
     };
 
-    public type Event = {
-        id : Nat;
-        timestamp : Nat;
-        namespace : Text;
-        data : ICRC16;
-    };
-
     public type EventRelay = {
         id : Nat;
+        prevId : ?Nat;
         timestamp : Nat;
         namespace : Text;
         source : Principal;
         data : ICRC16;
+        headers : ?ICRC16Map;
     };
 
     public type EventNotification = {
         id : Nat;
         eventId : Nat;
+        preEventId : ?Nat;
         timestamp : Nat;
         namespace : Text;
         data : ICRC16;
         source : Principal;
+        headers : ?ICRC16Map;
+        filter : ?Text;
     };
 
-    public type ICRC16Map = (Text, ICRC16);
+    public type PublishError = {
+        #Unauthorized;
+        #ImproperId : Text;
+        #Busy; // This Broadcaster is busy at the moment and cannot process requests
+        #GenericError : GenericError;
+    };
+
+    public type GenericError = {
+        error_code : Nat;
+        message : Text;
+    };
+
+    public type ICRC16Map = [(Text, ICRC16)];
 
     public type SubscriberActor = actor {
-        icrc72_handle_notification([Message]) : async ();
-        icrc72_handle_notification_trusted([Message]) : async {
+        icrc72_handle_notification([EventNotification]) : async ();
+        icrc72_handle_notification_trusted([EventNotification]) : async {
             #Ok : Value;
             #Err : Text;
         };
+    };
 
+    public type BroadcasterActor = actor {
+        icrc72_register_subscription(subscription : [SubscriptionInfo]) : async [(SubscriptionInfo, Bool)];
+        icrc72_publish([EventRelay]) : async [{
+            Err : [PublishError];
+            Ok : [Nat];
+        }];
     };
 };

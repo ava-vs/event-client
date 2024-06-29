@@ -141,7 +141,7 @@
         background-color: #d43504;
     }
 
-    form {
+    /* form {
         display: flex;
         flex-direction: column;
         gap: 1rem;
@@ -157,5 +157,5 @@
 
     input[type="text"] {
         width: 60%;
-    }
+    } */
 </style>

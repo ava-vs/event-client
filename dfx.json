@@ -15,12 +15,8 @@
       "declarations": {
         "node_compatibility": true
       },
-      "main": "src/client/ICRC72Broadcaster.mo",
+      "main": "src/client/main.mo",
       "type": "motoko"
-    },
-    "evm_rpc": {
-      "type": "pull",
-      "id": "7hfb6-caaaa-aaaar-qadga-cai"
     },
     "frontend": {
       "dependencies": [
