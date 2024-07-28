@@ -8,7 +8,7 @@
   import { writable } from "svelte/store";
 
   let messagesMapStore = writable(new Map());
-  const TARGET_PRINCIPAL = "mmt3g-qiaaa-aaaal-qi6ra-cai";
+  const TARGET_PRINCIPAL = process.env.CANISTER_ID_CLIENT; //"mmt3g-qiaaa-aaaal-qi6ra-cai";
 
   function createSampleEntity(id) {
     return {
@@ -36,7 +36,8 @@
   }
 
   function initializeMessagesMap() {
-    const principals = [TARGET_PRINCIPAL, "mls5s-5qaaa-aaaal-qi6rq-cai"];
+    const frontend_canister = process.env.CANISTER_ID_FRONTEND;
+    const principals = [TARGET_PRINCIPAL, frontend_canister];
 
     principals.forEach((principal, index) => {
       const notifications = [
@@ -70,7 +71,7 @@
         },
       ],
     },
-    source: Principal.fromText("mmt3g-qiaaa-aaaal-qi6ra-cai"),
+    source: Principal.fromText(TARGET_PRINCIPAL),
     headers: {
       "#Map": [
         ["Content-Type", { "#Text": "application/json" }],
