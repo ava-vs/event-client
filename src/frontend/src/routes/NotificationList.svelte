@@ -32,10 +32,8 @@
     }
 
     function initializeMessagesMap() {
-        // Создаем несколько примеров Principal
         const principals = [TARGET_PRINCIPAL, "mls5s-5qaaa-aaaal-qi6rq-cai"];
 
-        // Для каждого Principal создаем несколько уведомлений
         principals.forEach((principal, index) => {
             const notifications = [
                 createSampleEntity(index * 100 + 1),
@@ -181,7 +179,7 @@
 
 <style>
     .notifications-container {
-        font-family: 'Baumans', Arial, sans-serif;
+        font-family: "Baumans", Arial, sans-serif;
         max-width: 800px;
         margin: 0 auto;
         padding: 20px;

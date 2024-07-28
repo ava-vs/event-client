@@ -17,7 +17,7 @@ import Buffer "mo:base/Buffer";
 
 actor class Main() = Self {
 
-    var current_broadcaster = "mmt3g-qiaaa-aaaal-qi6ra-cai";
+    var current_broadcaster = "rvrj4-pyaaa-aaaal-ajluq-cai";
 
     private let subManager = SubscriptionManager.SubscriptionManager();
     private let pubManager = Publisher.PublisherManager();
@@ -30,6 +30,10 @@ actor class Main() = Self {
         let result = await broadcaster.icrc72_register_subscription([subscription]);
         Debug.print("Subscription created with result: " # Nat.toText(result.size()));
         await subManager.icrc72_register_single_subscription(subscription);
+    };
+
+    public func getSubscriptions() : async [Types.SubscriptionInfo] {
+        await subManager.getSubscriptions();
     };
 
     public func unsubscribeAll(subscriber : Principal) : async () {
