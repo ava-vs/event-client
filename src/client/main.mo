@@ -182,6 +182,28 @@ actor class Main() = Self {
 
     // -----------------------------------------------------------------------------------
     // Publication Part
+
+    public shared func publish(event : Types.Event) : async Result.Result<Nat, Text> {
+        let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
+        try {
+            let result = await broadcaster.icrc72_publish([event]);
+            switch (result[0]) {
+                case (#Ok(ids)) {
+                    if (ids.size() > 0) {
+                        #ok(ids[0]);
+                    } else {
+                        #err("No event ID returned");
+                    };
+                };
+                case (#Err(errors)) {
+                    #err("Error publishing event: " # debug_show (errors));
+                };
+            };
+        } catch (error) {
+            #err("Error calling broadcaster: " # Error.message(error));
+        };
+    };
+
     type FrontEvent = {
         id : Nat;
         prevId : Nat;

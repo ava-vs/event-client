@@ -35,3 +35,4 @@ canister_ids.json
 pnpm-lock.yaml
 package-lock.json
 
+src/client/example_notification.mo
