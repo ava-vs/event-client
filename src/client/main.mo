@@ -14,6 +14,7 @@ import Bool "mo:base/Bool";
 import Nat "mo:base/Nat";
 import Option "mo:base/Option";
 import Buffer "mo:base/Buffer";
+import Error "mo:base/Error";
 
 actor class Main() = Self {
 
@@ -219,19 +220,19 @@ actor class Main() = Self {
         }];
     };
     public func frontEvent_publish(events : [FrontEvent]) : async [{
-        Ok : [Nat];
-        Err : [Types.PublishError];
+        #Ok : [Nat];
+        #Err : [Types.PublishError];
     }] {
         // TODO check if event is valid
         // TODO check if event is already published
         // TODO check if event is expired
         // TODO check if event is already in the queue
         let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
-        let result = Buffer.Buffer<{ Ok : [Nat]; Err : [Types.PublishError] }>(events.size());
+        let result = Buffer.Buffer<{ #Ok : [Nat]; #Err : [Types.PublishError] }>(events.size());
         for (frontevent in events.vals()) {
             let data = convertData(frontevent.dataType, frontevent.dataValue);
             let converted_headers = convertHeaders(frontevent.headers);
-            let event : Types.EventRelay = {
+            let event : Types.Event = {
                 id = frontevent.id;
                 prevId = ?frontevent.prevId;
                 timestamp = frontevent.timestamp;
