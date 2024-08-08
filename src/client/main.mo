@@ -27,10 +27,9 @@ actor class Main() = Self {
     //-------------------------------------------------------------------------------------
     // Subcription Part
     public shared func subscribe(subscription : Types.SubscriptionInfo) : async Bool {
-        let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
-        let result = await broadcaster.icrc72_register_subscription([subscription]);
-        Debug.print("Subscription created with result: " # Nat.toText(result.size()));
-        await subManager.icrc72_register_single_subscription(subscription);
+
+        await subManager.icrc72_register_single_subscription(current_broadcaster, subscription);
+        // result[0].1
     };
 
     public func getSubscriptions() : async [Types.SubscriptionInfo] {
@@ -175,10 +174,38 @@ actor class Main() = Self {
         Iter.toArray(resultMap.keys());
     };
 
-    public shared (msg) func removeAllMessages(messages : [Types.EventNotification]) : async Result.Result<Nat, Text> {
-        if (not Principal.isController(msg.caller)) return #err("Only controller can remove all notifications");
+    public shared (msg) func removeAllMessages() : async Result.Result<Nat, Text> {
+        // if (not Principal.isController(msg.caller)) return #err("Only controller can remove all notifications");
+        let size = messagesMap.size();
         messagesMap := HashMap.HashMap<Principal, [Types.EventNotification]>(10, Principal.equal, Principal.hash);
-        #ok 0;
+        #ok size;
+    };
+
+    public shared (msg) func removeMessagesById(ids : [Nat]) : async Result.Result<Nat, Text> {
+        var removedCount = 0;
+
+        label a for (id in ids.vals()) {
+            for ((principal, messages) in messagesMap.entries()) {
+                // TODO if (not (principal == msg.caller)) { continue a };
+                let updatedMessages = Array.filter(
+                    messages,
+                    func(notification : Types.EventNotification) : Bool {
+                        if (notification.id == id) {
+                            removedCount += 1;
+                            return false; // Remove this message
+                        };
+                        return true; // Keep this message
+                    },
+                );
+
+                if (updatedMessages.size() < messages.size()) {
+                    // Update the messagesMap only if we removed a message
+                    messagesMap.put(principal, updatedMessages);
+                };
+            };
+        };
+
+        #ok(removedCount);
     };
 
     // -----------------------------------------------------------------------------------
@@ -186,20 +213,90 @@ actor class Main() = Self {
 
     public shared func publish(event : Types.Event) : async Result.Result<Nat, Text> {
         let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
-        try {
-            let result = await broadcaster.icrc72_publish([event]);
-            switch (result[0]) {
-                case (#Ok(ids)) {
-                    if (ids.size() > 0) {
-                        #ok(ids[0]);
-                    } else {
-                        #err("No event ID returned");
+        // check publication
+        let existPublication = pubManager.publications.get(event.source);
+        switch (existPublication) {
+            case (null) {
+                let publication : Types.PublicationInfo = {
+                    namespace = event.namespace;
+                    // TODO handle stats
+                    stats = [("messagesSent", #Nat(0))];
+                };
+                pubManager.publications.put(event.source, [publication]);
+            };
+            case (?publication) {
+                // Check if the namespace already exists
+                let existingNamespace = Array.find<Types.PublicationInfo>(
+                    publication,
+                    func(p) { p.namespace == event.namespace },
+                );
+
+                switch (existingNamespace) {
+                    case (null) {
+                        // If namespace doesn't exist, add a new publication
+                        let newPublication : Types.PublicationInfo = {
+                            namespace = event.namespace;
+                            stats = [("messagesSent", #Nat(1))];
+                        };
+                        pubManager.publications.put(event.source, Array.append(publication, [newPublication]));
+                    };
+                    case (?existingPub) {
+                        // If namespace exists, update the stats
+                        let updatedStats = Array.map<(Text, Types.ICRC16), (Text, Types.ICRC16)>(
+                            existingPub.stats,
+                            func((key, value)) {
+                                if (key == "messagesSent") {
+                                    switch (value) {
+                                        case (#Nat(count)) {
+                                            return (key, #Nat(count + 1));
+                                        };
+                                        case (_) {
+                                            return (key, value);
+                                        };
+                                    };
+                                } else {
+                                    return (key, value);
+                                };
+                            },
+                        );
+                        let updatedPublication = {
+                            namespace = existingPub.namespace;
+                            stats = updatedStats;
+                        };
+                        let updatedPublications = Array.map<Types.PublicationInfo, Types.PublicationInfo>(
+                            publication,
+                            func(pub) {
+                                if (pub.namespace == event.namespace) {
+                                    updatedPublication;
+                                } else {
+                                    pub;
+                                };
+                            },
+                        );
+                        pubManager.publications.put(event.source, updatedPublications);
                     };
                 };
-                case (#Err(errors)) {
-                    #err("Error publishing event: " # debug_show (errors));
+            };
+        };
+
+        // Now proceed with publishing the event
+        try {
+            let result : [{
+                Err : [Types.PublishError];
+                Ok : [Nat];
+            }] = await broadcaster.icrc72_publish([event]);
+            if (result.size() > 0) {
+                let ids = result[0].Ok;
+                let errors = result[0].Err;
+                if (errors.size() > 0) {
+                    return #err("Error publishing event: " # debug_show (errors));
+                } else {
+                    // Save the event
+                    pubManager.saveEvent(event);
+                    return #ok(ids[0]);
                 };
             };
+            return #err("Error publishing event: no result");
         } catch (error) {
             #err("Error calling broadcaster: " # Error.message(error));
         };
@@ -220,15 +317,15 @@ actor class Main() = Self {
         }];
     };
     public func frontEvent_publish(events : [FrontEvent]) : async [{
-        #Ok : [Nat];
-        #Err : [Types.PublishError];
+        Ok : [Nat];
+        Err : [Types.PublishError];
     }] {
         // TODO check if event is valid
         // TODO check if event is already published
         // TODO check if event is expired
         // TODO check if event is already in the queue
         let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
-        let result = Buffer.Buffer<{ #Ok : [Nat]; #Err : [Types.PublishError] }>(events.size());
+        let result = Buffer.Buffer<{ Ok : [Nat]; Err : [Types.PublishError] }>(events.size());
         for (frontevent in events.vals()) {
             let data = convertData(frontevent.dataType, frontevent.dataValue);
             let converted_headers = convertHeaders(frontevent.headers);

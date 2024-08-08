@@ -24,13 +24,18 @@ module {
          *   }
          */
         private var subscriptions : HashMap.HashMap<Principal, [Types.SubscriptionInfo]> = HashMap.HashMap<Principal, [Types.SubscriptionInfo]>(10, Principal.equal, Principal.hash);
+        let current_broadcaster = "rvrj4-pyaaa-aaaal-ajluq-cai"; //defoult broadcaster
 
-        public func icrc72_register_single_subscription(subscription : Types.SubscriptionInfo) : async Bool {
+        public func icrc72_register_single_subscription(current_broadcaster : Text, subscription : Types.SubscriptionInfo) : async Bool {
             var subscriber_list = subscriptions.get(subscription.subscriber);
             switch (subscriber_list) {
                 case (null) {
                     // if the subscriber is not found, add the subscription to the list
                     subscriptions.put(subscription.subscriber, [subscription]);
+                    let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
+                    let result = await broadcaster.icrc72_register_subscription([subscription]);
+                    return result[0].1;
+                    // Debug.print("Subscription created with result: " # Nat.toText(result.size()));
                 };
                 case (?list) {
                     // else, check if the subscription already exists
@@ -45,9 +50,13 @@ module {
                             // if the subscription is not found, add it to the list
                             var l = Utils.pushIntoArray<Types.SubscriptionInfo>(subscription, list);
                             subscriptions.put(subscription.subscriber, l);
+                            let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
+                            let result = await broadcaster.icrc72_register_subscription([subscription]);
+                            return result[0].1;
                         };
                         case (_) {
-                            // else, return false
+                            // else,
+                            return false;
                         };
                     };
                 };
@@ -59,7 +68,8 @@ module {
             var results = Buffer.Buffer<(Types.SubscriptionInfo, Bool)>(subscriptions.size());
             for (subscription in subscriptionInfos.vals()) {
                 subscriptions.put(subscription.subscriber, [subscription]);
-                results.add((subscription, true));
+                let result = await icrc72_register_single_subscription(current_broadcaster, subscription);
+                results.add((subscription, result));
             };
             return Buffer.toArray(results);
         };

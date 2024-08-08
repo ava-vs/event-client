@@ -199,8 +199,8 @@ module {
     public type BroadcasterActor = actor {
         icrc72_register_subscription(subscription : [SubscriptionInfo]) : async [(SubscriptionInfo, Bool)];
         icrc72_publish([Event]) : async [{
-            #Err : [PublishError];
-            #Ok : [Nat];
+            Err : [PublishError];
+            Ok : [Nat];
         }];
     };
 };
