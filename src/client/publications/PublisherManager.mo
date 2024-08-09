@@ -38,12 +38,12 @@ module {
         //     Principal.equal(id1.0, id2.0) and Text.equal(id1.1, id2.1);
         // };
 
-        private var publications = HashMap.HashMap<Principal, [Types.PublicationInfo]>(10, Principal.equal, Principal.hash);
+        public var publications = HashMap.HashMap<Principal, [Types.PublicationInfo]>(10, Principal.equal, Principal.hash);
         // private var publicationStats = HashMap.HashMap<PublicationId, HashMap.HashMap<Text, Types.ICRC16>>(10, eqPublicationId, hashPublicationId);
 
         private var notifications = HashMap.HashMap<Principal, [EventNotificationId]>(10, Principal.equal, Principal.hash);
 
-        private var events = HashMap.HashMap<Principal, [Types.EventRelay]>(10, Principal.equal, Principal.hash);
+        private var events = HashMap.HashMap<Principal, [Types.Event]>(10, Principal.equal, Principal.hash);
 
         public func initStore(store : [(Principal, [Types.PublicationInfo])]) {
             for ((principal, pub_list) in store.vals()) {
@@ -221,14 +221,14 @@ module {
         //     Buffer.toArray(result);
         // };
 
-        public func saveEvent(event : Types.EventRelay) {
+        public func saveEvent(event : Types.Event) {
             let exist_events = events.get(event.source);
             switch (exist_events) {
                 case (null) {
                     events.put(event.source, [event]);
                 };
                 case (?_exist) {
-                    let new_events = Utils.pushIntoArray<Types.EventRelay>(event, _exist);
+                    let new_events = Utils.pushIntoArray<Types.Event>(event, _exist);
                     events.put(event.source, new_events);
                 };
             };

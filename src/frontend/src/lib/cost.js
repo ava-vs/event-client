@@ -8,6 +8,7 @@ const BYTE_COST_RESPONSE = 800; // 800 cycles per byte for the response
 const NODES_IN_STANDARD_SUBNET = 13;
 const NODES_IN_FIDUCIARY_SUBNET = 34;
 
+// @ts-ignore
 function getSubnetSize(subnet) {
     if (subnet === "fiduciary") {
         return NODES_IN_FIDUCIARY_SUBNET;
@@ -16,6 +17,7 @@ function getSubnetSize(subnet) {
 }
 
 // Get HTTP request cost
+// @ts-ignore
 function getHttpRequestCost(api, payloadSizeBytes, maxResponseBytes, nodesInSubnet) {
     const ingressBytes = payloadSizeBytes + Math.max(100, api.length) + 100; // Overhead for ingress message
 
@@ -28,6 +30,7 @@ function getHttpRequestCost(api, payloadSizeBytes, maxResponseBytes, nodesInSubn
 }
 
 // Get RPC cost
+// @ts-ignore
 function getRpcCost(service, payloadSizeBytes, maxResponseBytes) {
     const nodesInSubnet = getSubnetSize(service.subnetType); // Assume subnetType is provided in the service object
 

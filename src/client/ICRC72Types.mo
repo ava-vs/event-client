@@ -152,7 +152,7 @@ module {
         #Err : Text;
     };
 
-    public type EventRelay = {
+    public type Event = {
         id : Nat;
         prevId : ?Nat;
         timestamp : Nat;
@@ -198,7 +198,7 @@ module {
 
     public type BroadcasterActor = actor {
         icrc72_register_subscription(subscription : [SubscriptionInfo]) : async [(SubscriptionInfo, Bool)];
-        icrc72_publish([EventRelay]) : async [{
+        icrc72_publish([Event]) : async [{
             Err : [PublishError];
             Ok : [Nat];
         }];
