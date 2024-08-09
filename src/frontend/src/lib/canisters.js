@@ -1,4 +1,4 @@
-import { createActor, canisterId } from 'declarations/client';
+import { createActor, canisterId } from '../../../declarations/client';
 import { building } from '$app/environment';
 
 function dummyActor() {

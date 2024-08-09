@@ -1,10 +1,10 @@
-/// <reference types="vitest" />
-import { fileURLToPath, URL } from 'url';
-import { sveltekit } from '@sveltejs/kit/vite';
+// @ts-nocheck
 import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { sveltePreprocess } from 'svelte-preprocess';
 import environment from 'vite-plugin-environment';
 import dotenv from 'dotenv';
-import path from 'path';
+import { fileURLToPath, URL } from 'url';
 
 dotenv.config({ path: '../../.env' });
 
@@ -31,7 +31,9 @@ export default defineConfig({
     },
   },
   plugins: [
-    sveltekit(),
+    sveltekit({
+      preprocess: sveltePreprocess()
+    }),
     environment("all", { prefix: "CANISTER_" }),
     environment("all", { prefix: "DFX_" }),
   ],
@@ -50,7 +52,8 @@ export default defineConfig({
       {
         find: "$lib",
         replacement: fileURLToPath(
-          new URL('../lib', import.meta.url)),
+          new URL('src/lib', import.meta.url)
+        ),
       }
     ],
   },

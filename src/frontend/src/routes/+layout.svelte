@@ -1,20 +1,29 @@
 <script>
-	import { browser } from "$app/environment";
-	import { page } from "$app/stores";
+	import Header from "./components/Header.svelte";
+	import "./styles.css";
 
-	/** @type {import('./$types').LayoutServerData} */
+	// /** @type {import('./$types').LayoutServerData} */
+	// export let data;
+
+	// $: if (browser && data?.analyticsId) {
+	// 	webVitals({
+	// 		path: $page.url.pathname,
+	// 		params: $page.params,
+	// 		analyticsId: data.analyticsId
+	// 	});
+	// }
 </script>
 
 <div class="app">
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Lexend+Zetta:wght@100..900&display=swap"
-		rel="stylesheet"
-	/>
+	<Header />
+
 	<main>
 		<slot />
 	</main>
+
+	<!-- <footer>
+		<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
+	</footer> -->
 </div>
 
 <style>
@@ -22,26 +31,34 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
-		width: 100vw; /* Full viewport width */
-		overflow-x: hidden; /* Prevent horizontal scrolling */
 	}
+
 	main {
 		flex: 1;
-		padding-top: 3em;
 		display: flex;
 		flex-direction: column;
-		padding: 0; /* Remove padding */
+		padding: 1rem;
 		width: 100%;
-		min-width: 440px;
-		height: 100%; /* Full height */
-		margin: 0;
+		max-width: 64rem;
+		margin: 0 auto;
 		box-sizing: border-box;
-		overflow-y: auto; /* Allow vertical scrolling if needed */
 	}
-	@media (max-width: 480px) {
-		main {
-			width: 100vw; /* Full viewport width on mobile */
-			min-height: 100vh; /* Minimum full viewport height */
+
+	/* footer {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		padding: 12px;
+	}
+
+	footer a {
+		font-weight: bold;
+	}
+
+	@media (min-width: 480px) {
+		footer {
+			padding: 12px 0;
 		}
-	}
+	} */
 </style>
