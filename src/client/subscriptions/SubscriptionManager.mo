@@ -4,7 +4,6 @@ import Array "mo:base/Array";
 import Option "mo:base/Option";
 import Buffer "mo:base/Buffer";
 import Types "../ICRC72Types";
-import Utils "../Utils";
 
 module {
     public class SubscriptionManager() = Self {
@@ -26,42 +25,55 @@ module {
         private var subscriptions : HashMap.HashMap<Principal, [Types.SubscriptionInfo]> = HashMap.HashMap<Principal, [Types.SubscriptionInfo]>(10, Principal.equal, Principal.hash);
         let current_broadcaster = "rvrj4-pyaaa-aaaal-ajluq-cai"; //defoult broadcaster
 
-        public func icrc72_register_single_subscription(current_broadcaster : Text, subscription : Types.SubscriptionInfo) : async Bool {
-            var subscriber_list = subscriptions.get(subscription.subscriber);
-            switch (subscriber_list) {
-                case (null) {
-                    // if the subscriber is not found, add the subscription to the list
-                    subscriptions.put(subscription.subscriber, [subscription]);
-                    let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
-                    let result = await broadcaster.icrc72_register_subscription([subscription]);
-                    return result[0].1;
-                    // Debug.print("Subscription created with result: " # Nat.toText(result.size()));
-                };
-                case (?list) {
-                    // else, check if the subscription already exists
-                    let exists = Array.find<Types.SubscriptionInfo>(
-                        list,
-                        func(s) {
-                            s.namespace == subscription.namespace and s.subscriber == subscription.subscriber
-                        },
-                    );
-                    switch (exists) {
-                        case (null) {
-                            // if the subscription is not found, add it to the list
-                            var l = Utils.pushIntoArray<Types.SubscriptionInfo>(subscription, list);
-                            subscriptions.put(subscription.subscriber, l);
-                            let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
-                            let result = await broadcaster.icrc72_register_subscription([subscription]);
-                            return result[0].1;
-                        };
-                        case (_) {
-                            // else,
-                            return false;
-                        };
-                    };
-                };
+        public func icrc72_register_single_subscription(current_broadcaster : Text, subscription : Types.SubscriptionInfo) : async (Bool, Text) {
+            let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
+            let result = await broadcaster.icrc72_register_subscription([subscription]);
+            if (result[0].1) {
+
+                subscriptions.put(subscription.subscriber, [subscription]);
             };
-            true;
+            return (result[0].1, subscription.namespace);
+
+            // TODO add front check is subscriction exists
+            // var subscriber_list = subscriptions.get(subscription.subscriber);
+            // switch (subscriber_list) {
+            //     case (null) {
+            //         // if the subscriber is not found, add the subscription to the list
+            //         subscriptions.put(subscription.subscriber, [subscription]);
+            //         let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
+            //         let result = await broadcaster.icrc72_register_subscription([subscription]);
+            //         Debug.print("Subscription " # subscription.namespace # " created.");
+            //         return (result[0].1, subscription.namespace);
+
+            //     };
+            //     case (?list) {
+            //         // else, check if the subscription already exists
+            //         Debug.print("Subscriptions found: " # debug_show (list));
+            //         let exists = Array.find<Types.SubscriptionInfo>(
+            //             list,
+            //             func(s) {
+            //                 s.namespace == subscription.namespace and s.subscriber == subscription.subscriber
+            //             },
+            //         );
+            //         switch (exists) {
+            //             case (null) {
+            //                 // if the subscription is not found, add it to the list
+            //                 Debug.print("Adding subscription to list of subscriptions");
+            //                 var l = Utils.pushIntoArray<Types.SubscriptionInfo>(subscription, list);
+            //                 subscriptions.put(subscription.subscriber, l);
+            //                 let broadcaster : Types.BroadcasterActor = actor (current_broadcaster);
+            //                 let result = await broadcaster.icrc72_register_subscription([subscription]);
+            //                 Debug.print("Success: " # debug_show (result));
+            //                 return (result[0].1, subscription.namespace);
+            //             };
+            //             case (_) {
+            //                 // else,
+            //                 return (false, "Subscription exist: " # subscription.namespace);
+            //             };
+            //         };
+            //     };
+            // };
+            // (false, "default error");
         };
 
         public func icrc72_register_subscription(subscriptionInfos : [Types.SubscriptionInfo]) : async [(Types.SubscriptionInfo, Bool)] {
@@ -69,7 +81,7 @@ module {
             for (subscription in subscriptionInfos.vals()) {
                 subscriptions.put(subscription.subscriber, [subscription]);
                 let result = await icrc72_register_single_subscription(current_broadcaster, subscription);
-                results.add((subscription, result));
+                results.add((subscription, result.0));
             };
             return Buffer.toArray(results);
         };

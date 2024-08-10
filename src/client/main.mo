@@ -24,12 +24,25 @@ actor class Main() = Self {
     private let pubManager = Publisher.PublisherManager();
     private var messagesMap = HashMap.HashMap<Principal, [Types.EventNotification]>(10, Principal.equal, Principal.hash);
 
+    stable var messagesStore : [(Principal, [Types.EventNotification])] = [];
+
+    system func preupgrade() {
+        messagesStore := Iter.toArray(messagesMap.entries());
+        // TODO other stats (events, etc)
+    };
+
+    system func postupgrade() {
+        for (entry in messagesStore.vals()) {
+            messagesMap.put(entry.0, entry.1);
+        };
+        messagesStore := [];
+    };
     //-------------------------------------------------------------------------------------
     // Subcription Part
     public shared func subscribe(subscription : Types.SubscriptionInfo) : async Bool {
 
-        await subManager.icrc72_register_single_subscription(current_broadcaster, subscription);
-        // result[0].1
+        let result = await subManager.icrc72_register_single_subscription(current_broadcaster, subscription);
+        result.0;
     };
 
     public func getSubscriptions() : async [Types.SubscriptionInfo] {
