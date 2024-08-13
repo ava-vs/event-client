@@ -1,10 +1,12 @@
-# Motoko Event Hub 
-
-This repository contains the implementation of the **Event Hub** in [Motoko](https://github.com/dfinity/motoko) programming language for [Internet Computer](https://internetcomputer.org/). 
+# Motoko Event Hub / Attention DAO Client
 
 ## Summary:
 
+**Event-Driven Communication on the Internet Computer**
+
 **Event Hub** is a [draft ICRC72](https://github.com/icdevs/ICEventsWG/blob/main/Meetings/20240515/icrc72draft.md) Motoko pub-sub pattern implementation for managing events, subscribers, and sending events to subscribers.
+
+**Attention DAO** features a decentralized architecture, preserving canister isolation for enhanced security and scalability.
 
 **Event Hub** also provides interoperability with Ethereum RPC methods.
  
@@ -18,15 +20,11 @@ This repository contains the implementation of the **Event Hub** in [Motoko](htt
 ## Features:
 - Subscriber Management: Functions for subscribing (subscribe) and unsubscribing (unsubscribe) to events.
 - Publication Managment: Register a new publication and publish events to subscribers.
-- Broadcaster: Distribute messages to subscribers 
-- Ethereum Interaction: Functions are provided to call Ethereum RPC methods (callEthgetLogs, callEthgetBlockByNumber, callEthsendRawTransaction).
+- Distribute messages to subscribers vit Event Hub Broadcaster
 
 ## Usage
 
-Subscriptions and publications can be made through the Event Hub Client frontend ([example](https://mls5s-5qaaa-aaaal-qi6rq-cai.icp0.io)).
-
-## Dependencies
-This project depends on [evm_rpc canister](https://github.com/internet-computer-protocol/evm-rpc-canister).
+Subscriptions and publications can be made through the Event Hub Client front-end or via inter-canister calls to the Client back-end.
 
 ## Deployment
 
@@ -39,19 +37,8 @@ dfx deploy --ic
 #### Local
 ```bash
 dfx start --background
-```
 
-#### Locally deploy the `evm_rpc` canister
-```bash
-dfx deps pull
-dfx deps init evm_rpc --argument '(record { nodesInSubnet = 28 })'
-dfx deps deploy
 dfx deploy
-```
-
-or 
-```bash
-sh deps-deploy.sh
 ```
 
 ### Contributing
@@ -59,3 +46,7 @@ Contributions are welcome. Please submit a pull request or open an issue to disc
 
 ### License
 This project is licensed under the terms of the MIT license.
+
+### Links
+
+- Wiki 
