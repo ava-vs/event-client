@@ -6,7 +6,7 @@ const client_canister = "mmt3g-qiaaa-aaaal-qi6ra-cai";
 let client_canister_actor;
 
 export async function load() {
-    const agent = await HttpAgent.create({ host: 'https://ic0.app' });
+    const agent = await HttpAgent.create({ host: 'https://*.icp0.io' });
 
     if (dev) {
         await agent.fetchRootKey();

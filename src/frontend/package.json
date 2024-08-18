@@ -4,6 +4,7 @@
     "@dfinity/auth-client": "^2.0.0",
     "@dfinity/candid": "^2.0.0",
     "@dfinity/principal": "^2.0.0",
+    "@fontsource/baumans": "^5.0.12",
     "@fontsource/fira-mono": "^5.0.13"
   },
   "devDependencies": {

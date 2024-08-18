@@ -20,6 +20,9 @@ importers:
       '@dfinity/principal':
         specifier: ^2.0.0
         version: 2.0.0
+      '@fontsource/baumans':
+        specifier: ^5.0.12
+        version: 5.0.13
       '@fontsource/fira-mono':
         specifier: ^5.0.13
         version: 5.0.13
@@ -395,6 +398,9 @@ packages:
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/baumans@5.0.13':
+    resolution: {integrity: sha512-Wwet2Fjibvxt2/x7G5tiP2AiAdl41dsHoS1kib10Zq3spkc9DqYvB/0O9oW3y1k2ROMLHgi8OWcDiRIsQgRmuA==}
 
   '@fontsource/fira-mono@5.0.13':
     resolution: {integrity: sha512-fZDjR2BdAqmauEbTjcIT62zYzbOgDa5+IQH34D2k8Pxmy1T815mAqQkZciWZVQ9dc/BgdTtTUV9HJ2ulBNwchg==}
@@ -1804,6 +1810,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.21.5':
     optional: true
+
+  '@fontsource/baumans@5.0.13': {}
 
   '@fontsource/fira-mono@5.0.13': {}
 

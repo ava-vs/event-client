@@ -27,7 +27,6 @@
 	const TARGET_PRINCIPAL = "mmt3g-qiaaa-aaaal-qi6ra-cai";
 
 	onMount(() => {
-		console.log("onMount start");
 		handleNotificationsImpl();
 	});
 
