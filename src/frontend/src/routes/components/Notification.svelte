@@ -1,91 +1,121 @@
 <script>
-	import { createEventDispatcher } from 'svelte';
-	import CustomTypography from './CustomTypography.svelte';
-	import ReactionDisplay from './ReactionDisplay.svelte';
+	// @ts-nocheck
 
+	import { createEventDispatcher } from "svelte";
+	import CustomTypography from "./CustomTypography.svelte";
+	import ReactionDisplay from "./ReactionDisplay.svelte";
+
+	// @ts-ignore
 	export let notification;
 
 	const dispatch = createEventDispatcher();
 
-	let parsedContent = '';
+	let parsedContent = "";
+	// @ts-ignore
 	let parsedReactions = [];
 	let showDetails = false;
 
+	// @ts-ignore
 	$: {
 		parseNotificationData(notification.data);
 	}
 
+	// @ts-ignore
 	function parseICRC16Value(value) {
-		if (typeof value === 'object' && value !== null) {
-			if ('Text' in value) return value.Text;
-			if ('Nat' in value) return BigInt(value.Nat).toString();
-			if ('Int' in value) return value.Int;
-			if ('Bool' in value) return value.Bool;
-			if ('Array' in value) return value.Array.map(parseICRC16Value);
-			if ('Map' in value) {
-				return new Map(value.Map.map(([k, v]) => [k, parseICRC16Value(v)]));
+		if (typeof value === "object" && value !== null) {
+			if ("Text" in value) return value.Text;
+			if ("Nat" in value) return BigInt(value.Nat).toString();
+			if ("Int" in value) return value.Int;
+			if ("Bool" in value) return value.Bool;
+			if ("Array" in value) return value.Array.map(parseICRC16Value);
+			if ("Map" in value) {
+				return new Map(
+					// @ts-ignore
+					value.Map.map(([k, v]) => [k, parseICRC16Value(v)]),
+				);
 			}
 			// Обработка случая, когда значение уже является Map
 			if (value instanceof Map) {
-				return new Map([...value].map(([k, v]) => [k, parseICRC16Value(v)]));
+				return new Map(
+					// @ts-ignore
+					[...value].map(([k, v]) => [k, parseICRC16Value(v)]),
+				);
 			}
 			// Обработка случая, когда значение уже является массивом или объектом
 			if (Array.isArray(value)) {
 				return value.map(parseICRC16Value);
 			}
-			if (typeof value === 'object') {
-				return new Map(Object.entries(value).map(([k, v]) => [k, parseICRC16Value(v)]));
+			if (typeof value === "object") {
+				return new Map(
+					// @ts-ignore
+					Object.entries(value).map(([k, v]) => [
+						k,
+						parseICRC16Value(v),
+					]),
+				);
 			}
 		}
 		return value;
 	}
 
+	// @ts-ignore
 	function parseNotificationData(data) {
-		console.log('Raw notification data:', data);
+		// console.log('Raw notification data:', data);
 		const parsedData = parseICRC16Value(data);
-		console.log('Parsed notification data:', parsedData);
+		// console.log('Parsed notification data:', parsedData);
 
 		if (parsedData instanceof Map) {
-			parsedContent = parsedData.get('content') || '';
-			const expectedReactions = parsedData.get('expectedReactions') || [];
+			parsedContent = parsedData.get("content") || "";
+			const expectedReactions = parsedData.get("expectedReactions") || [];
 			parsedReactions = expectedReactions
+				// @ts-ignore
 				.map((reaction) => {
 					if (reaction instanceof Map) {
 						return {
-							namespace: reaction.get('namespace') || '',
-							template: parseICRC16Value(reaction.get('template')) || '',
-							price: reaction.get('price') || 0,
-							recipient: reaction.get('recipient') || ''
+							namespace: reaction.get("namespace") || "",
+							template:
+								parseICRC16Value(reaction.get("template")) ||
+								"",
+							price: reaction.get("price") || 0,
+							recipient: reaction.get("recipient") || "",
 						};
 					}
 					return null;
 				})
+				// @ts-ignore
 				.filter((r) => r !== null);
 		}
-		console.log('Parsed reactions:', parsedReactions);
+		// @ts-ignore
+		// console.log("Parsed reactions:", parsedReactions);
 	}
 
 	function toggleDetails() {
 		showDetails = !showDetails;
 	}
 
+	// @ts-ignore
 	function formatTimestamp(timestamp) {
 		return new Date(Number(timestamp)).toLocaleString();
 	}
 
+	// @ts-ignore
 	function handleReaction(event) {
-		dispatch('reaction', {
+		dispatch("reaction", {
+			// @ts-ignore
 			notificationId: notification.id,
-			reaction: event.detail
+			reaction: event.detail,
 		});
 	}
 
+	// @ts-ignore
 	function renderICRC16(data) {
 		const parsed = parseICRC16Value(data);
 		return JSON.stringify(
 			parsed,
-			(key, value) => (value instanceof Map ? Object.fromEntries(value) : value),
-			2
+			// @ts-ignore
+			(key, value) =>
+				value instanceof Map ? Object.fromEntries(value) : value,
+			2,
 		);
 	}
 </script>
@@ -108,7 +138,7 @@
 	{/if}
 
 	<button on:click={toggleDetails}>
-		{showDetails ? 'Hide Details' : 'Show Details'}
+		{showDetails ? "Hide Details" : "Show Details"}
 	</button>
 
 	{#if showDetails}
@@ -120,7 +150,8 @@
 			</div>
 			{#if notification.headers}
 				<div class="headers-section">
-					<CustomTypography variant="body2">Headers:</CustomTypography>
+					<CustomTypography variant="body2">Headers:</CustomTypography
+					>
 					<pre>{renderICRC16(notification.headers)}</pre>
 				</div>
 			{/if}
@@ -128,8 +159,13 @@
 
 		{#if parsedReactions.length > 0}
 			<div class="reactions-section">
-				<CustomTypography variant="body2">Available Reactions:</CustomTypography>
-				<ReactionDisplay reactions={parsedReactions} on:reaction={handleReaction} />
+				<CustomTypography variant="body2"
+					>Available Reactions:</CustomTypography
+				>
+				<ReactionDisplay
+					reactions={parsedReactions}
+					on:reaction={handleReaction}
+				/>
 			</div>
 		{/if}
 	{/if}

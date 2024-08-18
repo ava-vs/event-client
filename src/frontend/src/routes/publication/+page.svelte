@@ -11,7 +11,7 @@
     } from "../auth.js";
     import { Principal } from "@dfinity/principal";
     import "../index.scss";
-    import ComplexDataInput from "../components/ComplexDataInput.svelte.js";
+    import ComplexDataInput from "../components/ComplexDataInput.svelte";
     import { nextNotification } from "$lib/notification-store";
 
     // @ts-ignore

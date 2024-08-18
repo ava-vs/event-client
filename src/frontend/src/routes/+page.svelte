@@ -9,6 +9,7 @@
 		principalId,
 		client_canister_actor,
 		client_canister,
+		CLIENT_CANISTER_ID,
 	} from "./auth.js";
 	import { Principal } from "@dfinity/principal";
 
@@ -24,7 +25,7 @@
 		loggedIn = value;
 	});
 
-	const TARGET_PRINCIPAL = "mmt3g-qiaaa-aaaal-qi6ra-cai";
+	const TARGET_PRINCIPAL = CLIENT_CANISTER_ID;
 
 	onMount(() => {
 		handleNotificationsImpl();
@@ -78,7 +79,7 @@
 	// @ts-ignore
 	async function handleReaction(event) {
 		const { notificationId, reaction } = event.detail;
-		console.log(`Reaction for notification ${notificationId}:`, reaction);
+		// console.log(`Reaction for notification ${notificationId}:`, reaction);
 
 		try {
 			let actor = client_canister_actor;
@@ -119,7 +120,7 @@
 				headers: [],
 			};
 
-			console.log("Publishing reaction event:", pub_event);
+			// console.log("Publishing reaction event:", pub_event);
 			// @ts-ignore
 			const result = await actor.publish(pub_event);
 			console.log("Reaction event published:", result);
