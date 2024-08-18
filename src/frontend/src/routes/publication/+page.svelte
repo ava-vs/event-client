@@ -12,42 +12,21 @@
     import { Principal } from "@dfinity/principal";
     import "../index.scss";
     import ComplexDataInput from "../components/ComplexDataInput.svelte";
-    import { nextNotification } from "$lib/notification-store";
-
-    // @ts-ignore
-    // import PubTest from "../components/PubTest.svelte.js";
+    // import PubTest from "../components/PubTest.svelte";
 
     let isPublishing = false;
-    // @ts-ignore
     let publishResult = null;
 
+    // let client_canister = 'mmt3g-qiaaa-aaaal-qi6ra-cai';
     let loggedIn = false;
-    // @ts-ignore
-    /**
-     * @type {null}
-     */
     let prevId = null;
     let includePrevId = false;
     let includeHeaders = false;
-    // @ts-ignore
     let id = 0;
-    let namespace = "test";
+    let namespace = "event.hub.balance";
     let timestamp = Date.now();
-    // @ts-ignore
     let headers = [];
     let complexData = { type: "Text", value: "" };
-
-    // @ts-ignore
-    function handleComplexDataUpdate(event) {
-        complexData = event.detail;
-    }
-
-    function getNextId() {
-        // @ts-ignore
-        let next = get(nextNotification) + 1;
-        nextNotification.set(next);
-        return BigInt(next);
-    }
 
     function handleLogin() {
         loginII();
@@ -62,28 +41,22 @@
     });
 
     function addHeader() {
-        // @ts-ignore
         headers = [
             ...headers,
             { fieldName: "", fieldType: "Text", fieldValue: "" },
         ];
     }
 
-    // @ts-ignore
     function removeHeader(index) {
-        // @ts-ignore
         headers = headers.filter((_, i) => i !== index);
     }
 
-    // @ts-ignore
     function updateHeader(index, field, value) {
-        // @ts-ignore
         headers = headers.map((header, i) =>
             i === index ? { ...header, [field]: value } : header,
         );
     }
 
-    // @ts-ignore
     function convertToICRC16(data) {
         switch (data.type) {
             case "Text":
@@ -96,7 +69,6 @@
                 return { Bool: data.value === "true" };
             case "Map":
                 return {
-                    // @ts-ignore
                     Map: Object.entries(data.value).map(([key, val]) => [
                         key,
                         convertToICRC16(val),
@@ -104,7 +76,6 @@
                 };
             case "Array":
                 return {
-                    // @ts-ignore
                     Array: data.value.map((item) => convertToICRC16(item)),
                 };
             default:
@@ -115,11 +86,9 @@
     async function handleSubmit() {
         isPublishing = true;
         publishResult = null;
-        const nextId = getNextId();
 
         const event = {
-            id: nextId,
-            // @ts-ignore
+            id: Number(id),
             prevId: includePrevId ? [Number(prevId)] : [],
             timestamp: BigInt(timestamp),
             namespace: namespace,
@@ -127,7 +96,6 @@
             data: convertToICRC16(complexData),
             headers: includeHeaders
                 ? [
-                      // @ts-ignore
                       headers.map((h) => [
                           h.fieldName,
                           convertToICRC16({
@@ -142,10 +110,8 @@
             let actor = client_canister_actor;
             if (!client_canister_actor) {
                 console.log("Creating new client_canister actor");
-                // @ts-ignore
                 actor = await client_canister();
             }
-            // @ts-ignore
             const result = await actor.publish(event);
             if ("ok" in result) {
                 console.log("Event published successfully. IDs:", result.ok);
@@ -156,7 +122,6 @@
             }
         } catch (error) {
             console.error("Error calling publish method:", error);
-            // @ts-ignore
             publishResult = { success: false, error: error.message };
         } finally {
             isPublishing = false;
@@ -169,10 +134,10 @@
     {#if loggedIn}
         <div>
             <div class="event-form">
-                <!-- <div class="input-group">
-					<label for="id">ID</label>
-					<input type="number" id="id" bind:value={id} />
-				</div> -->
+                <div class="input-group">
+                    <label for="id">ID</label>
+                    <input type="number" id="id" bind:value={id} />
+                </div>
                 <div class="checkbox-group">
                     <label for="includePrevId">Add Previous ID?</label>
                     <input
@@ -213,10 +178,7 @@
                     </select>
                 </div>
 
-                <ComplexDataInput
-                    bind:data={complexData}
-                    on:update={handleComplexDataUpdate}
-                />
+                <ComplexDataInput bind:data={complexData} />
 
                 <div class="checkbox-group">
                     <label for="includeHeaders">Add Headers?</label>

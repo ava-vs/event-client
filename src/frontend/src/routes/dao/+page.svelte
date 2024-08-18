@@ -66,6 +66,7 @@
             // @ts-ignore
             const result = await actor.getProposals(100, 0); // Fetch up to 100 proposals, starting from offset 0
             proposals = result.data;
+            console.log("Proposals: ", proposals);
         } catch (error) {
             console.error("Error fetching proposals:", error);
         } finally {
