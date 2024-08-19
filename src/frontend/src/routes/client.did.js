@@ -1,7 +1,34 @@
-// @ts-ignore
+// @ts-nocheck
 export const idlFactory = ({ IDL }) => {
     const ICRC16 = IDL.Rec();
-    const Result_4 = IDL.Variant({ 'ok': IDL.Text, 'err': IDL.Text });
+    const Result_6 = IDL.Variant({ 'ok': IDL.Text, 'err': IDL.Text });
+    const ProposalContent = IDL.Variant({
+        'other': IDL.Record({ 'action': IDL.Text, 'description': IDL.Text }),
+        'codeUpdate': IDL.Record({
+            'description': IDL.Text,
+            'wasmModule': IDL.Vec(IDL.Nat8),
+        }),
+        'adjustParameters': IDL.Record({
+            'parameterName': IDL.Text,
+            'newValue': IDL.Text,
+            'description': IDL.Text,
+        }),
+        'transferFunds': IDL.Record({
+            'recipient': IDL.Principal,
+            'amount': IDL.Nat,
+            'purpose': IDL.Variant({
+                'serviceBill': IDL.Text,
+                'toFund': IDL.Text,
+                'grantPayment': IDL.Text,
+            }),
+        }),
+    });
+    const Member = IDL.Record({ 'id': IDL.Principal, 'votingPower': IDL.Nat });
+    const CreateProposalError = IDL.Variant({
+        'notAuthorized': IDL.Null,
+        'invalid': IDL.Vec(IDL.Text),
+    });
+    const Result_5 = IDL.Variant({ 'ok': IDL.Nat, 'err': CreateProposalError });
     const FrontEvent = IDL.Record({
         'id': IDL.Nat,
         'source': IDL.Principal,
@@ -73,11 +100,11 @@ export const idlFactory = ({ IDL }) => {
         'timestamp': IDL.Nat,
         'namespace': IDL.Text,
     });
-    const Result_3 = IDL.Variant({
+    const Result_4 = IDL.Variant({
         'ok': IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(EventNotification))),
         'err': IDL.Text,
     });
-    const Result_2 = IDL.Variant({
+    const Result_3 = IDL.Variant({
         'ok': IDL.Vec(EventNotification),
         'err': IDL.Text,
     });
@@ -90,7 +117,7 @@ export const idlFactory = ({ IDL }) => {
         'subscriber': IDL.Principal,
         'namespace': IDL.Text,
     });
-    const Result_1 = IDL.Variant({ 'ok': IDL.Bool, 'err': IDL.Text });
+    const Result_2 = IDL.Variant({ 'ok': IDL.Bool, 'err': IDL.Text });
     const Event = IDL.Record({
         'id': IDL.Nat,
         'source': IDL.Principal,
@@ -100,14 +127,27 @@ export const idlFactory = ({ IDL }) => {
         'prevId': IDL.Opt(IDL.Nat),
         'namespace': IDL.Text,
     });
-    const Result = IDL.Variant({ 'ok': IDL.Nat, 'err': IDL.Text });
+    const Result_1 = IDL.Variant({ 'ok': IDL.Nat, 'err': IDL.Text });
+    const VoteError = IDL.Variant({
+        'proposalNotFound': IDL.Null,
+        'notAuthorized': IDL.Null,
+        'alreadyVoted': IDL.Null,
+        'votingClosed': IDL.Null,
+        'wrongVotingPower': IDL.Null,
+    });
+    const Result = IDL.Variant({ 'ok': IDL.Null, 'err': VoteError });
     const Main = IDL.Service({
-        'changeBroadcaster': IDL.Func([IDL.Text], [Result_4], []),
+        'changeBroadcaster': IDL.Func([IDL.Text], [Result_6], []),
+        'createProposal': IDL.Func(
+            [ProposalContent],
+            [Result_5],
+            [],
+        ),
         'frontEvent_publish': IDL.Func(
             [IDL.Vec(FrontEvent)],
             [
                 IDL.Vec(
-                    IDL.Variant({
+                    IDL.Record({
                         'Ok': IDL.Vec(IDL.Nat),
                         'Err': IDL.Vec(PublishError),
                     })
@@ -120,13 +160,13 @@ export const idlFactory = ({ IDL }) => {
             [IDL.Text, IDL.Vec(EventNotification)],
             [],
         ),
-        'getReceivedMessages': IDL.Func([], [Result_3], []),
+        'getReceivedMessages': IDL.Func([], [Result_4], []),
         'getReceivedMessagesByNamespace': IDL.Func(
             [IDL.Text],
             [IDL.Vec(EventNotification)],
             [],
         ),
-        'getReceivedMessagesBySource': IDL.Func([IDL.Text], [Result_2], []),
+        'getReceivedMessagesBySource': IDL.Func([IDL.Text], [Result_3], []),
         'getSubscriptions': IDL.Func([], [IDL.Vec(SubscriptionInfo)], []),
         'icrc72_handle_notification': IDL.Func(
             [IDL.Vec(EventNotification)],
@@ -135,16 +175,18 @@ export const idlFactory = ({ IDL }) => {
         ),
         'icrc72_handle_notification_trusted': IDL.Func(
             [IDL.Vec(EventNotification)],
-            [IDL.Vec(Result_1)],
+            [IDL.Vec(Result_2)],
             [],
         ),
-        'publish': IDL.Func([Event], [Result], []),
-        'removeAllMessages': IDL.Func([IDL.Vec(EventNotification)], [Result], []),
+        'publish': IDL.Func([Event], [Result_1], []),
+        'removeAllMessages': IDL.Func([], [Result_1], []),
+        'removeMessagesById': IDL.Func([IDL.Vec(IDL.Nat)], [Result_1], []),
+        'setDao': IDL.Func([IDL.Text], [IDL.Bool], []),
         'subscribe': IDL.Func([SubscriptionInfo], [IDL.Bool], []),
         'unsubscribeAll': IDL.Func([IDL.Principal], [], []),
         'unsubscribeByNamespace': IDL.Func([IDL.Principal, IDL.Text], [], []),
+        'vote': IDL.Func([IDL.Nat, IDL.Text, IDL.Bool], [Result], []),
     });
     return Main;
 };
-// @ts-ignore
 export const init = ({ IDL }) => { return []; };

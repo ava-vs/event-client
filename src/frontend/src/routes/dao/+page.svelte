@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     // @ts-nocheck
 
     import { onMount } from "svelte";
@@ -9,6 +9,7 @@
         principalId,
         dao_backend,
         dao_canister_actor,
+        client_canister,
         CLIENT_CANISTER_ID,
     } from "../auth.js";
 
@@ -31,6 +32,9 @@
     let principal = "";
     let loggedIn = false;
     let activeTab = "Proposals";
+
+    let votingProposalId = null;
+    let votingResult = {};
 
     function handleLogin() {
         loginII();
@@ -133,13 +137,16 @@
         return JSON.stringify(content, serializeBigInt, 2);
     }
 
+    let clientActor: any;
+
+    onMount(async () => {
+        clientActor = await client_canister();
+    });
+
     onMount(() => {
         fetchProposals();
     });
 
-    /**
-     * @type {any}
-     */
     let balance = null;
 
     async function getBalance() {
@@ -173,30 +180,41 @@
     }
 
     async function vote(proposalId, voteYes) {
+        votingProposalId = proposalId;
+        votingResult[proposalId] = {
+            isLoading: true,
+            success: null,
+            error: null,
+        };
         isLoading = true;
-        let actor = dao_canister_actor;
+        // let actor = dao_canister_actor;
         try {
-            if (!dao_canister_actor) {
-                actor = await dao_backend();
-            }
-            console.log(
-                "Voting request: ",
-                proposalId,
-                CLIENT_CANISTER_ID,
-                voteYes,
-            );
-            const result = await actor.vote(
+            const result = await clientActor.vote(
                 proposalId,
                 CLIENT_CANISTER_ID,
                 voteYes,
             );
             console.log("Vote result:", result);
+            votingResult[proposalId] = {
+                isLoading: false,
+                success: true,
+                error: null,
+            };
             // Optionally, you can refresh the proposals after voting
             await fetchProposals();
         } catch (error) {
             console.error("Error voting:", error);
         } finally {
             isLoading = false;
+
+            setTimeout(() => {
+                votingResult[proposalId] = {
+                    isLoading: false,
+                    success: null,
+                    error: null,
+                };
+                votingProposalId = null;
+            }, 3000);
         }
     }
 </script>
@@ -253,15 +271,35 @@
                                             class="vote-button yes"
                                             on:click={() =>
                                                 vote(proposal.id, true)}
+                                            disabled={votingProposalId ===
+                                                proposal.id}
                                         >
-                                            Vote Yes
+                                            {#if votingResult[proposal.id]?.isLoading}
+                                                <span class="spinner"></span>
+                                            {:else if votingResult[proposal.id]?.success}
+                                                Voted!
+                                            {:else if votingResult[proposal.id]?.error}
+                                                Error
+                                            {:else}
+                                                Vote Yes
+                                            {/if}
                                         </button>
                                         <button
                                             class="vote-button no"
                                             on:click={() =>
                                                 vote(proposal.id, false)}
+                                            disabled={votingProposalId ===
+                                                proposal.id}
                                         >
-                                            Vote No
+                                            {#if votingResult[proposal.id]?.isLoading}
+                                                <span class="spinner"></span>
+                                            {:else if votingResult[proposal.id]?.success}
+                                                Voted!
+                                            {:else if votingResult[proposal.id]?.error}
+                                                Error
+                                            {:else}
+                                                Vote No
+                                            {/if}
                                         </button>
                                     </div>
                                 {:else}
@@ -429,8 +467,27 @@
         transition: background-color 0.3s;
     }
 
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #fff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
     .vote-button:disabled {
-        opacity: 0.5;
+        opacity: 0.7;
         cursor: not-allowed;
     }
 

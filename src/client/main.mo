@@ -19,6 +19,7 @@ import Error "mo:base/Error";
 actor class Main() = Self {
 
     var current_broadcaster = "rvrj4-pyaaa-aaaal-ajluq-cai";
+    var dao_canister_id : Text = "k5yym-uqaaa-aaaal-ajoyq-cai";
 
     private let subManager = SubscriptionManager.SubscriptionManager();
     private let pubManager = Publisher.PublisherManager();
@@ -387,5 +388,73 @@ actor class Main() = Self {
             result.put(header.fieldName, fieldValue);
         };
         return Iter.toArray(result.entries());
+    };
+
+    //---------------------------------------------------------------
+    // DAO part
+    type DaoActor = actor {
+        vote : (proposalId : Nat, voter : Text, vote : Bool) -> async Result.Result<(), VoteError>;
+        createProposal : (proposal : ProposalContent) -> async Result.Result<Nat, CreateProposalError>;
+    };
+
+    public type VoteError = {
+        #notAuthorized;
+        #alreadyVoted;
+        #votingClosed;
+        #proposalNotFound;
+        // #insufficientVotingPower;
+        #wrongVotingPower;
+    };
+
+    public func vote(proposalId : Nat, voterId : Text, vote : Bool) : async Result.Result<(), VoteError> {
+        let dao : DaoActor = actor (dao_canister_id);
+        await dao.vote(proposalId, voterId, vote);
+    };
+
+    type ProposalContent = {
+        #codeUpdate : {
+            description : Text;
+            wasmModule : Blob;
+        };
+        #transferFunds : {
+            amount : Nat;
+            recipient : Principal;
+            purpose : {
+                #toFund : Text; // e.g., "Rewards Fund", "Development Fund"
+                #grantPayment : Text; // Description or ID of the grant
+                #serviceBill : Text; // Description of the service or bill ID
+            };
+        };
+        #adjustParameters : {
+            parameterName : Text;
+            newValue : Text;
+            description : Text;
+        };
+        #other : {
+            description : Text;
+            action : Text;
+        };
+    };
+
+    type Member = {
+        votingPower : Nat;
+        id : Principal;
+    };
+
+    type CreateProposalError = {
+        #notAuthorized;
+        #invalid : [Text];
+    };
+
+    public func createProposal<system>(
+        content : ProposalContent
+    ) : async Result.Result<Nat, CreateProposalError> {
+        let dao : DaoActor = actor (dao_canister_id);
+        await dao.createProposal(content);
+    };
+
+    public func setDao(id : Text) : async Bool {
+        dao_canister_id := id;
+        true;
     };
 };
