@@ -3,6 +3,8 @@
 
     import { onMount } from "svelte";
     import {
+        loginII,
+        logout,
         isAuthenticated,
         principalId,
         dao_backend,
@@ -30,6 +32,14 @@
     let loggedIn = false;
     let activeTab = "Proposals";
 
+    function handleLogin() {
+        loginII();
+    }
+
+    function handleLogout() {
+        logout();
+    }
+
     // @ts-ignore
     /**
      * @type {string | any[]}
@@ -54,6 +64,11 @@
     isAuthenticated.subscribe((value) => {
         loggedIn = value;
     });
+
+    // Reactive statement to call getBalance when activeItem changes to 'Profile' and user is logged in
+    $: if (activeItem === "Profile" && loggedIn) {
+        getBalance();
+    }
 
     async function fetchProposals() {
         isLoading = true;
@@ -128,6 +143,10 @@
     let balance = null;
 
     async function getBalance() {
+        if (!loggedIn) {
+            balance = null;
+            return;
+        }
         isLoading = true;
         let actor = dao_canister_actor;
         try {
@@ -228,21 +247,33 @@
                             </p>
 
                             {#if getProposalStatus(proposal.statusLog) === "Open"}
-                                <div class="voting-buttons">
-                                    <button
-                                        class="vote-button yes"
-                                        on:click={() => vote(proposal.id, true)}
-                                    >
-                                        Vote Yes
-                                    </button>
-                                    <button
-                                        class="vote-button no"
-                                        on:click={() =>
-                                            vote(proposal.id, false)}
-                                    >
-                                        Vote No
-                                    </button>
-                                </div>
+                                {#if loggedIn}
+                                    <div class="voting-buttons">
+                                        <button
+                                            class="vote-button yes"
+                                            on:click={() =>
+                                                vote(proposal.id, true)}
+                                        >
+                                            Vote Yes
+                                        </button>
+                                        <button
+                                            class="vote-button no"
+                                            on:click={() =>
+                                                vote(proposal.id, false)}
+                                        >
+                                            Vote No
+                                        </button>
+                                    </div>
+                                {:else}
+                                    <div class="button-container">
+                                        <button
+                                            class="login"
+                                            on:click={handleLogin}
+                                        >
+                                            Login to Vote
+                                        </button>
+                                    </div>
+                                {/if}
                             {/if}
 
                             <details>
@@ -279,50 +310,28 @@
         {/if}
     {:else if activeItem === "Profile"}
         <div class="proposals-container">
-            {#if balance !== null}
-                <span>Balance = {balance} $FOCUS</span>
-                <br />
-                <div class="proposal-form">
+            {#if loggedIn}
+                {#if balance !== null}
+                    <span>Balance = {balance} $FOCUS</span>
+                    <br />
                     <PForm />
-                </div>
-                <br />
-                <!-- <div style="position:relative;padding-bottom:56.25%;">
-					<iframe
-						style="width:100%;height:100%;position:absolute;left:0px;top:0px"
-						src="https://embed.app.guidde.com/playbooks/m9p1arqmGcsTpg5bJJzMog"
-						title="Attention DAO & Event Hub"
-						frameborder="0"
-						referrerpolicy="unsafe-url"
-						allowfullscreen="true"
-						allow="clipboard-write"
-						sandbox="allow-popups allow-popups-to-escape-sandbox allow-scripts allow-forms allow-same-origin allow-presentation"
-					></iframe>
-				</div>
-				<p style="display: none">
-					00:00: In the attention down an event Hub section. 00:02: We will walk you through the
-					necessary steps to navigate the attention Dao 00:06: application. From accessing proposals
-					to submitting votes. 00:10: This guide will ensure that you are equipped with the
-					knowledge to work efficiently within 00:14: the platform. 00:17: Access the proposal
-					section. It's a heart of Dao governance. 00:22: Use the refresh proposals button to update
-					the list of proposals. 00:27: To check your balance and navigate to your profile settings.
-					00:30: Click the profile tab. 00:33: Here you will find the new proposal form. You can
-					access the proposal 00:37: types and choose from other code update parameter adjustment
-					00:41: and transfer funds. Select the other type for now. 00:47: Select the action you
-					want to perform? For other it is a text 00:51: box. 00:53: Open the description field.
-					It's a good practice to provide a brief 00:57: but informative overview of your proposal.
-					01:01: Enter testing for testing purposes. 01:04: The input just testing for testing
-					purposes 01:08: Submit the proposal It will take a few seconds to validate and 01:12:
-					Save. 01:14: Return to the proposal section 01:17: Update the proposals list 01:20: Vote
-					negatively on a proposal 01:23: Update the proposals list 01:26: This guide focuses on the
-					core features of attention Dao. 01:30: Managing a Dao starts with creating a new proposal
-					and pitching your voice. 01:35: The rest of the platforms features such as subscribing to
-					events publishing 01:39: events and receiving and responding to subscription notifications
-					are 01:44: covered in the following videos.
-				</p> -->
-            {:else if isLoading}
-                <span>Loading balance...</span>
+                    <br />
+                    <div class="button-container">
+                        <button class="logout" on:click={handleLogout}>
+                            Logout</button
+                        >
+                    </div>
+                {:else if isLoading}
+                    <span>Loading balance...</span>
+                {:else}
+                    <span>No balance found</span>
+                {/if}
             {:else}
-                <span>No balance found</span>
+                <div class="button-container">
+                    <button class="login" on:click={handleLogin}>
+                        Login with Internet Identity</button
+                    >
+                </div>
             {/if}
         </div>
     {:else}
@@ -441,5 +450,14 @@
 
     .vote-button.no:hover:not(:disabled) {
         background-color: #da190b;
+    }
+
+    .login-prompt {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .login-prompt p {
+        margin-bottom: 15px;
     }
 </style>
