@@ -1,33 +1,41 @@
 <script>
-	import { onMount } from 'svelte';
-	import { Principal } from '@dfinity/principal';
-	import { broadcaster, broadcaster_canister_actor } from '../auth.js';
-	import ReactionDisplay from './ReactionDisplay.svelte';
+	// @ts-nocheck
+
+	import { onMount } from "svelte";
+	import { Principal } from "@dfinity/principal";
+	import {
+		client_canister,
+		CLIENT_CANISTER_ID,
+	} from "../auth.js";
+	import ReactionDisplay from "./ReactionDisplay.svelte";
 
 	let publishing = false;
-	let result = '';
-	let parsedContent = '';
+	let result = "";
+	let parsedContent = "";
 	let parsedReactions = [];
 
-	const client_canister = 'mmt3g-qiaaa-aaaal-qi6ra-cai';
+	// const client_canister = "mmt3g-qiaaa-aaaal-qi6ra-cai";
 
 	function convertToICRC16(data) {
 		switch (data.type) {
-			case 'Text':
+			case "Text":
 				return { Text: data.value };
-			case 'Nat':
+			case "Nat":
 				return { Nat: BigInt(data.value) };
-			case 'Int':
+			case "Int":
 				return { Int: BigInt(data.value) };
-			case 'Bool':
-				return { Bool: data.value === 'true' };
-			case 'Map':
+			case "Bool":
+				return { Bool: data.value === "true" };
+			case "Map":
 				return {
-					Map: Object.entries(data.value).map(([key, val]) => [key, convertToICRC16(val)])
+					Map: Object.entries(data.value).map(([key, val]) => [
+						key,
+						convertToICRC16(val),
+					]),
 				};
-			case 'Array':
+			case "Array":
 				return {
-					Array: data.value.map((item) => convertToICRC16(item))
+					Array: data.value.map((item) => convertToICRC16(item)),
 				};
 			default:
 				return { Text: data.value };
@@ -35,123 +43,198 @@
 	}
 
 	const testData = {
-		id: 12,
+		id: 345,
 		prevId: 0,
 		timestamp: 1625097600000000,
-		namespace: 'test',
+		namespace: "test",
 		data: {
-			type: 'Map',
+			type: "Map",
 			value: {
-				content: { type: 'Text', value: 'Test message with reaction' },
+				content: { type: "Text", value: "Test message with reaction" },
 				expectedReactions: {
-					type: 'Array',
+					type: "Array",
 					value: [
 						{
-							type: 'Map',
+							type: "Map",
 							value: {
-								namespace: { type: 'Text', value: 'feedback.test' },
-								template: { type: 'Text', value: 'TextFeedback' },
-								price: { type: 'Nat', value: '10' },
-								recipient: { type: 'Principal', value: 'mmt3g-qiaaa-aaaal-qi6ra-cai' }
-							}
-						},
-						{
-							type: 'Map',
-							value: {
-								namespace: { type: 'Text', value: 'rating.namespace' },
-								template: { type: 'Text', value: 'LikeDislike' },
-								price: { type: 'Nat', value: '1' },
-								recipient: { type: 'Principal', value: 'mmt3g-qiaaa-aaaal-qi6ra-cai' }
-							}
-						},
-						{
-							type: 'Map',
-							value: {
-								namespace: { type: 'Text', value: 'registration.test' },
+								namespace: {
+									type: "Text",
+									value: "feedback.test",
+								},
 								template: {
-									type: 'Map',
+									type: "Text",
+									value: "TextFeedback",
+								},
+								price: { type: "Nat", value: "10" },
+								recipient: {
+									type: "Principal",
+									value: "mmt3g-qiaaa-aaaal-qi6ra-cai",
+								},
+							},
+						},
+						{
+							type: "Map",
+							value: {
+								namespace: {
+									type: "Text",
+									value: "rating.namespace",
+								},
+								template: {
+									type: "Text",
+									value: "LikeDislike",
+								},
+								price: { type: "Nat", value: "1" },
+								recipient: {
+									type: "Principal",
+									value: "mmt3g-qiaaa-aaaal-qi6ra-cai",
+								},
+							},
+						},
+						{
+							type: "Map",
+							value: {
+								namespace: {
+									type: "Text",
+									value: "registration.test",
+								},
+								template: {
+									type: "Map",
 									value: {
-										type: { type: 'Text', value: 'RegistrationForm' },
+										type: {
+											type: "Text",
+											value: "RegistrationForm",
+										},
 										fields: {
-											type: 'Array',
+											type: "Array",
 											value: [
 												{
-													type: 'Map',
+													type: "Map",
 													value: {
-														name: { type: 'Text', value: 'Full Name' },
-														fieldType: { type: 'Text', value: 'Text' },
-														required: { type: 'Bool', value: 'true' }
-													}
+														name: {
+															type: "Text",
+															value: "Full Name",
+														},
+														fieldType: {
+															type: "Text",
+															value: "Text",
+														},
+														required: {
+															type: "Bool",
+															value: "true",
+														},
+													},
 												},
 												{
-													type: 'Map',
+													type: "Map",
 													value: {
-														name: { type: 'Text', value: 'Age' },
-														fieldType: { type: 'Text', value: 'Number' },
-														required: { type: 'Bool', value: 'true' }
-													}
+														name: {
+															type: "Text",
+															value: "Age",
+														},
+														fieldType: {
+															type: "Text",
+															value: "Number",
+														},
+														required: {
+															type: "Bool",
+															value: "true",
+														},
+													},
 												},
 												{
-													type: 'Map',
+													type: "Map",
 													value: {
-														name: { type: 'Text', value: 'Subscribe to hackathon' },
-														fieldType: { type: 'Text', value: 'Boolean' },
-														required: { type: 'Bool', value: 'false' }
-													}
-												}
-											]
-										}
-									}
+														name: {
+															type: "Text",
+															value: "Subscribe to hackathon",
+														},
+														fieldType: {
+															type: "Text",
+															value: "Boolean",
+														},
+														required: {
+															type: "Bool",
+															value: "false",
+														},
+													},
+												},
+											],
+										},
+									},
 								},
-								price: { type: 'Nat', value: '20' },
-								recipient: { type: 'Principal', value: 'mmt3g-qiaaa-aaaal-qi6ra-cai' }
-							}
+								price: { type: "Nat", value: "20" },
+								recipient: {
+									type: "Principal",
+									value: "mmt3g-qiaaa-aaaal-qi6ra-cai",
+								},
+							},
 						},
 						{
-							type: 'Map',
+							type: "Map",
 							value: {
-								namespace: { type: 'Text', value: 'custom.test' },
-								template: {
-									type: 'Map',
-									value: {
-										type: { type: 'Text', value: 'Custom' },
-										details: { type: 'Text', value: 'Custom reaction template' }
-									}
+								namespace: {
+									type: "Text",
+									value: "custom.test",
 								},
-								price: { type: 'Nat', value: '50' },
-								recipient: { type: 'Principal', value: 'mmt3g-qiaaa-aaaal-qi6ra-cai' }
-							}
-						}
-					]
-				}
-			}
+								template: {
+									type: "Map",
+									value: {
+										type: { type: "Text", value: "Custom" },
+										details: {
+											type: "Text",
+											value: "Custom reaction template",
+										},
+									},
+								},
+								price: { type: "Nat", value: "50" },
+								recipient: {
+									type: "Principal",
+									value: "mmt3g-qiaaa-aaaal-qi6ra-cai",
+								},
+							},
+						},
+					],
+				},
+			},
 		},
-		headers: [{ fieldName: 'Content-Type', fieldType: 'Text', fieldValue: 'application/json' }]
+		headers: [
+			{
+				fieldName: "Content-Type",
+				fieldType: "Text",
+				fieldValue: "application/json",
+			},
+		],
 	};
 
 	function bigIntReplacer(key, value) {
-		if (typeof value === 'bigint') {
-			return value.toString() + 'n';
+		if (typeof value === "bigint") {
+			return value.toString() + "n";
 		}
 		return value;
 	}
 
 	function parsePublicationResult(data) {
-		if (typeof data === 'object' && data !== null) {
-			if ('Map' in data) {
+		if (typeof data === "object" && data !== null) {
+			if ("Map" in data) {
 				const map = new Map(data.Map);
-				parsedContent = map.get('content')?.Text || '';
-				const expectedReactions = map.get('expectedReactions')?.Array || [];
+				parsedContent = map.get("content")?.Text || "";
+				const expectedReactions =
+					map.get("expectedReactions")?.Array || [];
 				parsedReactions = expectedReactions
 					.map((reaction) => {
-						if ('Map' in reaction) {
+						if ("Map" in reaction) {
 							const reactionMap = new Map(reaction.Map);
 							return {
-								namespace: reactionMap.get('namespace')?.Text || '',
+								namespace:
+									reactionMap.get("namespace")?.Text || "",
 								template:
-									reactionMap.get('template')?.Text || reactionMap.get('template')?.Map || '',
-								price: reactionMap.get('price')?.Nat || 0,
-								recipient: reactionMap.get('recipient')?.Principal || ''
+									reactionMap.get("template")?.Text ||
+									reactionMap.get("template")?.Map ||
+									"",
+								price: reactionMap.get("price")?.Nat || 0,
+								recipient:
+									reactionMap.get("recipient")?.Principal ||
+									"",
 							};
 						}
 						return null;
@@ -161,37 +244,46 @@
 		}
 	}
 
+	let clientActor = null;
+
+	onMount(async () => {
+		clientActor = await client_canister();
+	});
+
 	function handleReaction(event) {
-		console.log('Reaction selected:', event.detail);
+		console.log("Reaction selected:", event.detail);
 		// Here you can implement logic to create a new publication based on the selected reaction
 	}
 
 	async function sendTestPublication() {
 		publishing = true;
-		result = '';
+		result = "";
 		try {
 			const event = {
 				id: Number(testData.id),
 				prevId: [Number(testData.prevId)],
 				timestamp: BigInt(testData.timestamp),
 				namespace: testData.namespace,
-				source: Principal.fromText(client_canister),
+				source: Principal.fromText(CLIENT_CANISTER_ID),
 				data: convertToICRC16(testData.data),
 				headers:
 					testData.headers.length > 0
 						? [
 								testData.headers.map((h) => [
 									h.fieldName,
-									convertToICRC16({ type: h.fieldType, value: h.fieldValue })
-								])
+									convertToICRC16({
+										type: h.fieldType,
+										value: h.fieldValue,
+									}),
+								]),
 							]
-						: []
+						: [],
 			};
-			let actor = broadcaster_canister_actor;
-			if (!broadcaster_canister_actor) {
-				actor = await broadcaster();
-			}
-			const publishResult = await actor.publish(event);
+			// let actor = broadcaster_canister_actor;
+			// if (!broadcaster_canister_actor) {
+			// 	actor = await broadcaster();
+			// }
+			const publishResult = await clientActor.publish(event);
 			result = `Publication sent successfully. Result: ${JSON.stringify(publishResult, bigIntReplacer)}`;
 		} catch (error) {
 			result = `Error sending publication: ${error.message}`;
@@ -202,10 +294,10 @@
 </script>
 
 <div class="test-publication">
-	<h2>Test Publication</h2>
-	<pre>{JSON.stringify(testData, null, 2)}</pre>
-	<button on:click={sendTestPublication} disabled={publishing}>
-		{publishing ? 'Sending...' : 'Send Test'}
+	<!-- <h2>Test Publication</h2>
+	<pre>{JSON.stringify(testData, null, 2)}</pre> -->
+	<button class="login" on:click={sendTestPublication} disabled={publishing}>
+		{publishing ? "Sending..." : "Send Test Pub"}
 	</button>
 	{#if result}
 		<div class="result">
@@ -222,7 +314,10 @@
 	{#if parsedReactions.length > 0}
 		<div class="parsed-reactions">
 			<h3>Available Reactions:</h3>
-			<ReactionDisplay reactions={parsedReactions} on:reaction={handleReaction} />
+			<ReactionDisplay
+				reactions={parsedReactions}
+				on:reaction={handleReaction}
+			/>
 		</div>
 	{/if}
 </div>
@@ -241,7 +336,7 @@
 		overflow-x: auto;
 	}
 	button {
-		background-color: #4caf50;
+		background-color: #668ab1;
 		border: none;
 		color: white;
 		padding: 15px 32px;

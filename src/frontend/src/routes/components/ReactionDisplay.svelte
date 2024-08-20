@@ -64,7 +64,7 @@
 			<span class="template"
 				>{parseReactionTemplate(reaction.template)}</span
 			>
-			<span class="price">{reaction.price} FOCUS</span>
+			<span class="price">{reaction.price} $FOCUS</span>
 		</button>
 	{/each}
 </div>

@@ -13,9 +13,10 @@ if (typeof global === 'undefined') {
 export const principalId = writable('');
 export const isAuthenticated = writable(false);
 export let client_canister_actor = null;
-let actual_canister = process.env.CANISTER_ID_CLIENT; // TODO use it as CLIENT_CANISTER_ID
+let actual_canister = process.env.CANISTER_ID_CLIENT;
 console.log("CLIENT_CANISTER_ID ", actual_canister);
-export const CLIENT_CANISTER_ID = actual_canister ? actual_canister : "mmt3g-qiaaa-aaaal-qi6ra-cai";
+const default_client_canister_id = "mmt3g-qiaaa-aaaal-qi6ra-cai";
+export let CLIENT_CANISTER_ID = actual_canister ? actual_canister : default_client_canister_id;
 
 export const broadcaster_canister = "rvrj4-pyaaa-aaaal-ajluq-cai";
 export let broadcaster_canister_actor = null;
@@ -88,7 +89,8 @@ export async function broadcaster() {
     agent.fetchRootKey().catch((err) => {
       console.log("Error fetching root key: ", err);
     });
-  } return Actor.createActor(_broadcaster, { agent, canisterId: broadcaster_canister });
+  }
+  return Actor.createActor(_broadcaster, { agent, canisterId: broadcaster_canister });
 }
 
 export async function client_canister() {
@@ -98,6 +100,10 @@ export async function client_canister() {
     agent.fetchRootKey().catch((err) => {
       console.log("Error fetching root key: ", err);
     });
+    // for local deployment: change CLIENT_CANISTER_ID to default 
+    CLIENT_CANISTER_ID = CLIENT_CANISTER_ID.startsWith("b") ? default_client_canister_id : CLIENT_CANISTER_ID;
+
     // @ts-ignore
-  } return Actor.createActor(_client, { agent, canisterId: CLIENT_CANISTER_ID });
+  }
+  return Actor.createActor(_client, { agent, canisterId: CLIENT_CANISTER_ID });
 }

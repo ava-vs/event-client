@@ -508,13 +508,4 @@
     .vote-button.no:hover:not(:disabled) {
         background-color: #da190b;
     }
-
-    .login-prompt {
-        text-align: center;
-        margin-top: 20px;
-    }
-
-    .login-prompt p {
-        margin-bottom: 15px;
-    }
 </style>

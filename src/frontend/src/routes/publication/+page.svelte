@@ -23,7 +23,7 @@
     let includePrevId = false;
     let includeHeaders = false;
     let id = 0;
-    let namespace = "event.hub.balance";
+    let namespace = "test";
     let timestamp = Date.now();
     let headers = [];
     let complexData = { type: "Text", value: "" };
@@ -112,6 +112,7 @@
                 console.log("Creating new client_canister actor");
                 actor = await client_canister();
             }
+            // console.log("Publishing event: ", event);
             const result = await actor.publish(event);
             if ("ok" in result) {
                 console.log("Event published successfully. IDs:", result.ok);
@@ -130,7 +131,6 @@
 </script>
 
 <main style="margin-top: 4rem;">
-    <!-- <PubTest /> -->
     {#if loggedIn}
         <div>
             <div class="event-form">
@@ -279,6 +279,9 @@
             >
         </div>
     {/if}
+    <!-- <div class="button-container">
+        <PubTest />
+    </div> -->
 </main>
 
 <style>
