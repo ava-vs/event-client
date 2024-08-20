@@ -156,14 +156,6 @@ module {
         let ggg = Text.fromChar(chars[6]) # Text.fromChar(chars[7]) # Text.fromChar(chars[8]);
         return Text.join(".", [s, ff, nnn, ggg].vals());
     };
-    // convert Event topics to Ethereum event topics
-    // public func convertEventTopicsToEthereumTopics(eventTopics : [T.EventFilter]) : [Blob] {
-    //     let topics = Buffer.Buffer<Blob>(eventTopics.size());
-    //     for (i in eventTopics.vals()) {
-    //         topics.add(i.value);
-    //     };
-    //     return Buffer.toArray(topics);
-    // };
 
     public func convertEventMetadataToBlob(metadata : [(Text, T.Value)]) : Blob {
         let buffer = Buffer.Buffer<Blob>(metadata.size());
@@ -271,25 +263,4 @@ module {
     private func isLeapYear(year : Int) : Bool {
         return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0);
     };
-    // private func nat32ToBytes(x : Nat32) : [Nat8] {
-    //     [
-    //         Nat8.fromNat(Nat32.toNat((x >> 24) & (255))),
-    //         Nat8.fromNat(Nat32.toNat((x >> 16) & (255))),
-    //         Nat8.fromNat(Nat32.toNat((x >> 8) & (255))),
-    //         Nat8.fromNat(Nat32.toNat((x & 255))),
-    //     ];
-    // };
-
-    //       public func arrayGetAll(candy: Candy.CandyShared): Candy.CandyShared {
-    //     switch (candy) {
-    //       case (#Array(array)) if (array.size() > 0) return array[0];
-    //       case (#Bytes(array)) if (array.size() > 0) return #Nat8(array[0]);
-    //       case (#Floats(array)) if (array.size() > 0) return #Float(array[0]);
-    //       case (#Ints(array)) if (array.size() > 0) return #Int(array[0]);
-    //       case (#Nats(array)) if (array.size() > 0) return #Nat(array[0]);
-    //       case (_) return #Option(null);
-    //     };
-
-    //     return #Option(null);
-    //   };
 };

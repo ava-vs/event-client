@@ -35,3 +35,6 @@ canister_ids.json
 pnpm-lock.yaml
 package-lock.json
 
+src/client/example_notification.mo
+src/frontend/src/routes/dao/old_page.svelte
+src/frontend/src/routes/publication/old_page.svelte

@@ -1,31 +1,28 @@
 <script>
-	import { browser } from "$app/environment";
-	import { page } from "$app/stores";
-	// import { back } from "$lib/images/back_client.svg";
-	// import './styles.css';
+	import Header from "./components/Header.svelte";
+	import "./styles.css";
 
-	/** @type {import('./$types').LayoutServerData} */
+	// /** @type {import('./$types').LayoutServerData} */
+	// export let data;
+
+	// $: if (browser && data?.analyticsId) {
+	// 	webVitals({
+	// 		path: $page.url.pathname,
+	// 		params: $page.params,
+	// 		analyticsId: data.analyticsId
+	// 	});
+	// }
 </script>
 
 <div class="app">
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Lexend+Zetta:wght@100..900&display=swap"
-		rel="stylesheet"
-	/>
+	<Header />
 
 	<main>
 		<slot />
 	</main>
 
 	<!-- <footer>
-		<p>
-			Visit <a
-				href="https://github.com/ava-vs/reputation/wiki"
-				target="_blank">our Wiki</a
-			> to learn more about aVa
-		</p>
+		<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
 	</footer> -->
 </div>
 
@@ -42,6 +39,7 @@
 		flex-direction: column;
 		padding: 1rem;
 		width: 100%;
+		max-width: 64rem;
 		margin: 0 auto;
 		box-sizing: border-box;
 	}
@@ -56,11 +54,11 @@
 
 	footer a {
 		font-weight: bold;
-	} */
+	}
 
 	@media (min-width: 480px) {
-		/* footer {
+		footer {
 			padding: 12px 0;
-		} */
-	}
+		}
+	} */
 </style>

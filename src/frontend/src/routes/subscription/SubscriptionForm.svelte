@@ -1,219 +1,68 @@
 <script>
-	import { backend } from "$lib/canisters";
-	import { Principal } from "@dfinity/principal";
-	import { createEventDispatcher } from "svelte";
-	import { writable } from "svelte/store";
+    import connector from "$lib/images/Connector.svg";
+    import { _client_canister_actor } from "./+page.js";
+    import { loginII, logout, isAuthenticated, principalId } from "../auth.js";
+    import { Principal } from "@dfinity/principal";
+    import "../../index.scss";
 
-	let subscriberPrincipal = "";
-	let namespace = "";
-	let filters = [""];
-	let active = false;
+    let client_canister = "mmt3g-qiaaa-aaaal-qi6ra-cai";
 
-	let message = writable(""); // for storing the message to be displayed
-	let messageType = writable("");
+    let loggedIn = false;
 
-	const dispatch = createEventDispatcher();
+    isAuthenticated.subscribe((value) => {
+        loggedIn = value;
+    });
+    function handleLogin() {
+        loginII();
+    }
 
-	async function subscribe() {
-		const subscription = {
-			subscriber: Principal.fromText(subscriberPrincipal),
-			namespace,
-			filters,
-			active,
-		};
-		const response = await backend.createSubscription(subscription);
-		console.log("Subscription registration response: ", response);
-		if (response) {
-			message.set("Subscription successful");
-			messageType.set("success");
-			setTimeout(() => {
-				message.set("");
-				messageType.set("");
-			}, 5000);
-		} else {
-			message.set("Failed to create subscription");
-			messageType.set("error");
-			setTimeout(() => {
-				message.set("");
-				messageType.set("");
-			}, 6000);
-		}
-		dispatch("submit", {
-			formData: { subscriberPrincipal, namespace, filters, response },
-		});
-	}
+    function handleLogout() {
+        logout();
+    }
+    let subscriber = "mlss5-5qaaa...";
+    let filter = "Filter 1";
+    let namespace = "event.hub.balance";
+    let subscriptionInfo = {
+        namespace: namespace,
+        subscriber: Principal.fromText(client_canister),
+        active: true,
+        filters: [namespace],
+        messagesReceived: 0,
+        messagesRequested: 0,
+        messagesConfirmed: 0,
+    };
 
-	function addFilter() {
-		filters = [...filters, ""];
-	}
+    async function handleSubmit() {
+        console.log("Submitted:", { subscriber, namespace, filter });
+        const subscription =
+            await _client_canister_actor.subscribe(subscriptionInfo);
+        console.log("Subscription created: ", subscription);
+        return subscription;
+    }
 </script>
 
-<div class="form-container">
-	<div class="form-group">
-		<label for="subscriberPrincipal">Subscriber</label>
-		<input
-			id="subscriberPrincipal"
-			class="form-input"
-			bind:value={subscriberPrincipal}
-			placeholder="Enter Subscriber Principal"
-		/>
-	</div>
-	<div class="form-group">
-		<label for="namespace">Namespace</label>
-		<input
-			id="namespace"
-			class="form-input"
-			bind:value={namespace}
-			placeholder="Enter Namespace"
-		/>
-	</div>
-	{#each filters as filter, index}
-		<div class="form-group filter-group">
-			<label for={`filter-${index}`}>Filter {index + 1}</label>
-			<div class="filter-container">
-				<input
-					id={`filter-${index}`}
-					type="text"
-					class="form-input-filter"
-					bind:value={filters[index]}
-					on:input={(e) => (filters[index] = e.target.value)}
-					placeholder={`Filter ${index + 1}`}
-				/>
-				<button class="form-button-filter" on:click={addFilter}
-					>Add</button
-				>
-			</div>
-		</div>
-	{/each}
-	<div
-		class="message"
-		class:success={$messageType === "success"}
-		class:error={$messageType === "error"}
-	>
-		{$message}
-	</div>
+<main>
+    <!-- <NavMenu /> -->
+    <!-- {#if loggedIn} -->
 
-	<button class="form-button-subscribe" on:click={subscribe}>Subscribe</button
-	>
-</div>
-
-<style>
-	.form-container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 1rem;
-		/* margin-top: 2rem; */
-	}
-
-	.form-group {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		width: 100%;
-		max-width: 400px;
-	}
-
-	.form-group label {
-		font-family: "Lexend Zetta", sans-serif;
-		margin-bottom: 0.5rem;
-		font-weight: bold;
-		font-size: 0.8rem;
-		color: white;
-	}
-
-	.filter-group {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.filter-container {
-		display: flex;
-		align-items: center;
-		width: 100%;
-	}
-
-	.form-input {
-		width: 100%;
-		max-width: 400px;
-	}
-
-	.form-input,
-	.form-input-filter {
-		padding: 0.5rem;
-		font-size: 1rem;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		background-color: transparent;
-		box-shadow: -5px -5px 15px rgba(158, 246, 244, 0.5);
-	}
-
-	.form-input-filter {
-		width: 100%;
-		margin-right: 20px;
-	}
-
-	.form-input::placeholder,
-	.form-input-filter::placeholder {
-		font-family: "Lexend Zetta", sans-serif;
-		font-size: 0.7rem;
-		color: white;
-		opacity: 1;
-	}
-
-	.form-input:focus,
-	.form-input-filter:focus {
-		border-color: #06636c;
-		box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
-		outline: none;
-	}
-
-	.form-button-filter,
-	.form-button-subscribe {
-		font-family: "Lexend Zetta", sans-serif;
-		border: white 1px solid;
-		border-radius: 10px;
-		background-color: transparent;
-		color: white;
-		cursor: pointer;
-		transition: background-color 0.3s;
-	}
-
-	.form-button-filter {
-		padding: 0.4rem;
-		max-width: 60px;
-		font-size: 0.9rem;
-	}
-
-	.form-button-subscribe {
-		padding: 0.5rem;
-		width: 100%;
-		max-width: 200px;
-		margin-top: 4rem;
-		font-size: 1rem;
-	}
-
-	.form-button-filter:hover,
-	.form-button-subscribe:hover {
-		background-color: #24bbe1;
-	}
-
-	.message {
-		margin-top: 1rem;
-		padding: 0.5rem;
-		border-radius: 5px;
-		font-family: "Lexend Zetta", sans-serif;
-	}
-
-	.success {
-		color: #22b49a;
-		background-color: #d4edda;
-		border-color: #c3e6cb;
-	}
-
-	.error {
-		color: #721c24;
-		background-color: #f8d7da;
-		border-color: #f5c6cb;
-	}
-</style>
+    <div class="subscription-form">
+        <div class="input-group">
+            <label for="subscriber">Subscriber</label>
+            <input type="text" id="subscriber" bind:value={subscriber} />
+        </div>
+        <div class="input-group">
+            <label for="namespace">Namespace</label>
+            <input type="text" id="namespace" bind:value={namespace} />
+        </div>
+        <div class="input-group">
+            <label for="filter">Filter</label>
+            <input type="text" id="filter" bind:value={filter} />
+        </div>
+        <button on:click={handleSubmit}>Submit</button>
+    </div>
+    <!-- {:else} -->
+    <!-- <button class="login" on:click={handleLogin}>
+        Login with Internet Identity</button -->
+    <!-- > -->
+    <!-- {/if} -->
+</main>

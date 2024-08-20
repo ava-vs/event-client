@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-ignore
 import { test, expect, afterEach } from 'vitest';
 import App from '../routes/+page.svelte';
 
