@@ -1,3 +1,5 @@
+@import '@fontsource/baumans';
+
 body {
     font-family: sans-serif;
     font-size: 1rem;
@@ -326,6 +328,11 @@ nav li[aria-current="page"] a::after {
     background-repeat: no-repeat;
     background-position: right 10px top 50%;
     background-size: 12px auto;
+}
+
+.copy_icon {
+    width: 15px;
+    height: 20px;
 }
 
 .login,

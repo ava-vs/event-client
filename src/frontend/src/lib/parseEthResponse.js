@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function parseMultiGetLogsResult(result) {
     if ("Consistent" in result) {
         return parseGetLogsResult(result.Consistent);
