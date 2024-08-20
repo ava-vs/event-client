@@ -37,22 +37,27 @@ dfx deploy --ic
 ```
 
 #### Local
+
 ```bash
 dfx start --background
 ```
 
-#### Locally deploy the `evm_rpc` canister
+##### Deploy locally 
+Change the isLocal flag to true in src/frontend/src/routes/auth.js:
+```
+const isLocal = true;
+
+```
+then
 ```bash
-dfx deps pull
-dfx deps init evm_rpc --argument '(record { nodesInSubnet = 28 })'
-dfx deps deploy
 dfx deploy
 ```
 
-or 
-```bash
-sh deps-deploy.sh
-```
+##### Test Publication with 4 Responses
+
+Uncomment the PubTest component in src/frontend/src/routes/publication/+page.svelte and use the "Send Pub Test" button on the publish page. 
+
+Check the main page for results.
 
 ### Contributing
 Contributions are welcome. Please submit a pull request or open an issue to discuss your ideas.
